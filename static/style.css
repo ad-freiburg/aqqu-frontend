@@ -1,0 +1,311 @@
+:root {
+    --main-color: #1a237e;
+    --main-color-light: #534bae;
+    --main-color-dark: #000051;
+    --accent-color: #42a5f5;
+    --text-color: #0d1a26;
+    --text-color-light: #64727f;
+    --border-color-light: #bebebe;
+    --button-color: #307ac3;
+    --button-color-light: #6ea1d5;
+    --button-color-disabled: #B4B4B4;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    font-family: Lato, sans-serif;
+    background-color: white;
+}
+
+p {
+    color: var(--main-color-dark);
+}
+
+h1 {
+    color: var(--main-color-dark);
+    font-weight: 500;
+    font-size: 60px;
+    margin-bottom: 0px;
+}
+
+h2 {
+    color: var(--main-color-dark);
+    font-weight: 400;
+    font-size: 19px;
+    margin-bottom: 70px;
+}
+
+.content {
+    float: left;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.table {
+    width: 80%;
+    float: center;
+    margin: auto;
+    margin-bottom: 0px;
+    margin-top: 0px;
+    position: relative;
+    left: 4%;
+}
+
+.table table, tr, td {
+    border-style: none;
+    margin-bottom: 0px; 
+}
+
+#aqqu_debug {
+    display: block;
+    background-color: var(--button-color);
+    border: 3px solid var(--button-color-light);
+    border-radius: 8px;
+    padding: 5px 9px;
+    margin: 32px 32px;
+    color: white;
+    font-size: 20px;
+    font-weight: 500;
+    position: absolute;
+    right:    0;
+    bottom:   0;
+}
+
+.question input {
+    border-radius: 4px;
+    border-style: solid;
+    border-width: 1px;
+    color: var(--text-color);
+    border-color: var(--main-color-dark);
+    font-size: 20px;
+    font-weight: 400;
+    height: 40px;
+    padding-left: 10px;
+    padding-top: 5px;
+    margin-bottom: 0px;
+    width: 100%;
+}
+ 
+.question input:focus {
+    box-shadow: 0 0 5px rgba(9, 9, 9, 1);
+    border-color: black;
+}
+
+.comp_buttons {
+    display: block;
+}
+ 
+.comp_buttons button {
+    width: 100%;
+    background-color: white;
+    border: 1px solid var(--border-color-light);
+    border-radius: 8px;
+    color: var(--text-color-light);
+    padding: 3px 0px 3px 8px;
+    text-align: left;
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: 400;
+    margin: 1px 0px 0px 0px;
+    cursor: pointer;
+    display: inline;
+}
+
+.submit button {
+    width: 100px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--button-color) 0%, var(--button-color) 100%); /* W3C */
+    border: none;
+    border-radius: 5px;
+    position: relative;
+    color: white;
+    font-weight: 400;
+    font-family: Lato, sans-serif;
+    font-size: 20px;
+    text-align: left;
+    text-indent: 5px;
+    cursor: pointer;
+    display: block;
+    margin: 0 0;
+}
+
+.submit button:active {
+    top: 1px;
+}
+
+.submit button:after {
+    content: "";
+    width: 0;
+    height: 0;
+    display: block;
+    border-top: 20px solid white;
+    border-bottom: 20px solid white;
+    border-left: 16px solid transparent;
+    border-right: 20px solid white;
+    position: absolute;
+    right: 0;
+    top: 0;
+    border-radius: 0 2px 2px 0px;  
+}
+
+.submit button:disabled {
+    background: var(--button-color-disabled);
+    cursor: default;
+}
+
+.result {
+    margin: auto;
+    margin-top: 40px;
+}
+
+.answers {
+    min-height: 110px;
+}
+
+.answer_fields {
+    background-color: white;
+    border: 2px;
+    border-color: var(--border-color-light);
+    border-style: solid;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin: 4px 4px;
+    display: inline-block;
+    color: var(--text-color);
+    font-size: 20px;
+    font-weight: 400;
+}
+
+.navigation {
+    margin-top: 20px;
+}
+
+.navigation button:disabled {
+    background: var(--button-color-disabled);
+    cursor: default;
+}
+
+
+.navigation button {
+    width: 50px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--button-color) 0%, var(--button-color) 100%); /* W3C */
+    border: none;
+    border-radius: 5px;
+    position: relative;
+    color: white;
+    font-weight: 400;
+    font-family: Lato, sans-serif;
+    font-size: 24px;
+    text-align: left;
+    cursor: pointer;
+    display: inline;
+    margin: 0 0px;
+}
+
+.left:after {
+    content: "";
+    width: 0;
+    height: 0;
+    display: block;
+    border-top: 20px solid white;
+    border-bottom: 20px solid white;
+    border-right: 10px solid transparent;
+    border-left: 20px solid white;
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 2px 0 0 2px;
+}
+
+.right:after {
+    content: "";
+    width: 0;
+    height: 0;
+    display: inline;
+    border-top: 20px solid white;
+    border-bottom: 20px solid  white;
+    border-left: 10px solid transparent;
+    border-right: 20px solid  white;
+    position: absolute;
+    right: 0;
+    top: 0;
+    border-radius: 0 2px 2px 0px;  
+}
+
+.navigation button:active {
+    top: 1px;
+}
+
+#first {
+    width: 80px;
+    text-align: right;
+    margin-right: 4px;
+    padding-right: 16px;
+}
+
+#previous {
+    width: 40px;
+    text-align: center;
+    margin-left: 4px;
+    margin-right: 4px;}
+
+#next {
+    width: 40px;
+    text-align: center;
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
+#last {
+    width: 80px;
+    margin-left: 4px;
+    padding-left: 16px;
+}
+
+#no_answer {
+    display: none;
+    margin-top: 30px;
+    font-size: 14px;
+    margin-bottom: 0px;
+}
+
+#caption {
+    margin-top: 10px;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+#interpretation {
+    display: block;
+    color: var(--text-color-light);
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    margin-top: 0px;
+}
+
+.show_more_less {
+    display: none;
+    background-color: var(--button-color);
+    border: 3px solid var(--button-color-light);
+    border-radius: 8px;
+    padding: 5px 9px;
+    margin: 4px 4px;
+    color: white;
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.more_results #show_more {
+    display: inline-block;
+}
+
+.less_results #show_less {
+    display:inline-block;
+}

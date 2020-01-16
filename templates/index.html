@@ -1,0 +1,80 @@
+<html>
+  <head>
+    <title>Aqqu Question Answering</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="static/style.css"/>
+    <link rel="icon" type="image/x-icon" href="static/favicon.ico">
+    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="static/script.js"></script>
+  </head>
+
+  <body>
+    <div class="content">
+      <h1 id="heading">Aqqu Question Answering</h1>
+      <h2> &copy; University of Freiburg, Chair for Algorithms and Data Structures, 2015 - 2020</h2>
+      <p>Enter your question:</p>
+      <table class="table">
+        <tr>
+          <form method="get">
+            <td width="90%">
+              <div class="question">
+                <input type="text" id="question" name="q" autocomplete="off" value="{{ question }}"
+                       onkeyup="handleKeyPress(event)" onfocus="getCompletions()">
+              </div>
+            </td>
+            <td width=10%>
+              <div class="submit">
+                <button id="submit">ASK</button>
+              </div>
+            </td>
+          </form>
+        </tr>
+        <tr>
+          <td>
+            <div id="completions" class="comp_buttons" data="{{ completions }}"></div>
+          </td>
+          <td>
+          </td>
+        </tr>
+        {% if answers %}
+          <tr align="center">
+            <td>
+              <div class="result">
+                {% if error|length == 0 %}
+                  <div>
+                    <p id="interpretation" data="{{ interpretations }}">
+                    </p>
+                  </div>
+                  <div class="answers" data="{{ answers }}">
+                    <button class='show_more_less' id='show_more' onclick='showMoreResults()'>...</button>
+                    <button class='show_more_less' id='show_less' onclick='showLessResults()'><</button>
+                  </div>
+                  <div class="information">
+                    <p id="no_answer">No answer found for this interpretation.</p>
+                  </div>
+                  <div class="navigation">
+                    <button class="left" id='first' onclick='navigateResults(0)'><<</button>
+                    <button id='previous' onclick='navigateResults(1)'><</button>
+                    <button id='next' onclick='navigateResults(2)'>></button>
+                    <button class="right" id='last' onclick='navigateResults(3)'>>></button>
+                  </div>
+                  <div>
+                    <p id='caption'></p>
+                  </div>
+                {% else %}
+                <p>{{ error }}<p>
+                {% endif %}
+              </div>
+            </td>
+            <td>
+            </td>
+          </tr>
+        {% endif %}
+      </table>
+      <form action="http://aqqu.cs.uni-freiburg.de/detailed/">
+        <input id="aqqu_debug" type="submit" value="Debug version >"/>
+      </form>
+    </div>
+  </body>
+</html>
+     
