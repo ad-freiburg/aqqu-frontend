@@ -86,6 +86,7 @@ def qac():
     conn = http.client.HTTPConnection(HOSTNAME_QAC + ":" + str(PORT_QAC))
 
     # Forward question prefix to QAC API
+    completions = []
     try:
         conn.request("GET", PATH_PREFIX_QAC % urlencoded_prefix)
         response = conn.getresponse().read().decode("utf8")
@@ -94,7 +95,6 @@ def qac():
         completions = get_completions(json_obj)
     except socket.error:
         logger.error("Connection to QAC API could not be established")
-        completions = []
 
     # Close connection to QAC Api
     conn.close()
@@ -141,6 +141,7 @@ def get_interpretation_strings(json_obj):
     """
     candidates = json_obj["candidates"]
     interpretation_strs = []
+    mid_to_name = get_mid_2_name(json_obj)
 
     for cand in candidates:
         # Get the mids of the recognized entities in the question
@@ -148,7 +149,8 @@ def get_interpretation_strings(json_obj):
         rec_ents_str = ""
         for i in range(len(rec_ents)):
             mid = rec_ents[i]["mid"]
-            rec_ents_str += mid
+            name = mid_to_name.get(mid, mid)
+            rec_ents_str += name
             if i < len(rec_ents) - 1:
                 rec_ents_str += " - "
 
@@ -174,6 +176,21 @@ def get_interpretation_strings(json_obj):
         interpretation_strs.append(interpretation_str)
 
     return interpretation_strs
+
+
+def get_mid_2_name(json_obj):
+    """Get names of identified entities as a mapping from MID to entity name.
+
+    Arguments:
+    json_obj - json object returned by the Aqqu API
+    """
+    mid_to_name = dict()
+    identified_entities = json_obj["parsed_query"]["identified_entities"]
+    for ent in identified_entities:
+        mid = ent["entity"]["mid"]
+        name = ent["entity"]["name"]
+        mid_to_name[mid] = name
+    return mid_to_name
 
 
 def get_completions(json_obj):
