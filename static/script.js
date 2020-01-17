@@ -412,8 +412,12 @@ $(document).ready(function(){
   // remain disabled even on reload
   $("#submit").prop('disabled', false);
 
-  $('.result').ready(function() {
-    displayAqquResults();
+  // Display Aqqu results if the result div exists and is completely loaded
+  var resultDiv = $(".result");
+  resultDiv.ready(function() {
+    if ($.contains(document.body, resultDiv[0])){
+      displayAqquResults();
+    }
   });
 
   // Allow navigation of results with left & right arrow key (only when input
