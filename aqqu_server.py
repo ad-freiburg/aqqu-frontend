@@ -79,6 +79,9 @@ def qac():
     # Get the current question prefix
     question_prefix = request.args.get("q")
 
+    # Get the current time stamp
+    timestamp = request.args.get("t")
+
     # Url encode question prefix to send to QAC API
     urlencoded_prefix = parse.quote(question_prefix)
 
@@ -86,20 +89,21 @@ def qac():
     conn = http.client.HTTPConnection(HOSTNAME_QAC + ":" + str(PORT_QAC))
 
     # Forward question prefix to QAC API
-    completions = []
+    result = []
     try:
         conn.request("GET", PATH_PREFIX_QAC % urlencoded_prefix)
         response = conn.getresponse().read().decode("utf8")
         logger.info("Response: '%s...'" % response[:69])
         json_obj = json.loads(response)
         completions = get_completions(json_obj)
+        result = {"completions": completions, "timestamp": timestamp}
     except socket.error:
         logger.error("Connection to QAC API could not be established")
 
     # Close connection to QAC Api
     conn.close()
 
-    return json.dumps(completions)
+    return json.dumps(result)
 
 
 def replace_entity_mentions(question):

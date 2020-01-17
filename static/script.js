@@ -3,8 +3,6 @@
 
 
 // ---------------------- QAC related variables -------------------------------
-var host = window.location.hostname;
-var port = window.location.port;
 var basePath = window.location.pathname.replace(/\/$/, "") + "/";
 
 var URL_PREFIX_QAC = basePath + "qac?q=";
@@ -14,6 +12,7 @@ var selectedButton = 0;
 var lastResultLen = 0;
 var lastMousePositionX = 0;
 var lastMousePositionY = 0;
+var maxTimestamp = 0;
 
 // ---------------------- Aqqu related variables ------------------------------
 var MAX_RESULTS = 10;
@@ -134,16 +133,28 @@ function getCompletions() {
   console.log("Query: "+ query);
 
   // Get completions for the current prefix from the server
-  var url = URL_PREFIX_QAC + query;
+  var url = URL_PREFIX_QAC + query + "&t=" + Date.now();
   $.get(url, function(result) {
-    result = jQuery.parseJSON(result);
+    var jsonObj = jQuery.parseJSON(result);
+
+    // Bail early if the result is empty
+    if (jsonObj.length == 0) return;
+
+    var completions = jsonObj["completions"];
+    var timestamp = jsonObj["timestamp"];
+
+    // Check if a more recent request has been received already
+    if (timestamp < maxTimestamp) {
+      return;
+    }
+    maxTimestamp = timestamp;
 
     // Remove old completion buttons
-    removeCompletionButtons(result.length);
+    removeCompletionButtons(completions.length);
 
     // Add the new buttons displaying the results sent by the server.
-    for (i=0; i < result.length; i++) {
-      var currCompletion = result[i].replace(/ \(alias=(.*?)\)/g, " <i>\($1\)</i>");
+    for (i=0; i < completions.length; i++) {
+      var currCompletion = completions[i].replace(/ \(alias=(.*?)\)/g, " <i>\($1\)</i>");
       $("<button/>", {
         class: "comp_buttons",
         id: "button" + i,
