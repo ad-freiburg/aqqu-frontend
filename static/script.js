@@ -88,9 +88,10 @@ function handleMouseOver(buttonId, event) {
  * input field on completion prediction button click
  */
 function handleCompletionButtonClick(buttonId) {
-  var v = $('#'+ buttonId).html();
-  v = v.replace(/ <i>\((.*?)\)<\/i>/g, "")
-  $('#question').val(v);
+  var original = $('#'+ buttonId).data("original");
+  var qids = $('#'+ buttonId).data("qids");
+  $('#question').val(original);
+  $('#qids').val(qids);
   // set focus to the end of the input within the input field.
   $('#question').focus();
 }
@@ -125,22 +126,24 @@ function getCompletions() {
   // Reset the selected button to 0 so that the selection starts again at the top
   selectedButton = 0;
 
-  // Get the current query prefix
-  var query = $("#question").val();
+  // Get the current question prefix with entities in the format [<QID>]
+  var question = $("#question").val();
+  var qids = $("#qids").val();
+  if (qids) {
+    question = getQidQuestion(question, qids);
+  }
 
   // Globally replace whitespaces with %20 otherwise trailing whitespaces are stripped
-  query = encodeURI(query);
-  console.log("Query: "+ query);
+  question = encodeURI(question);
+  console.log("question: "+ question);
 
   // Get completions for the current prefix from the server
-  var url = URL_PREFIX_QAC + query + "&t=" + Date.now();
-  $.get(url, function(result) {
-    var jsonObj = jQuery.parseJSON(result);
-
+  var url = URL_PREFIX_QAC + question + "&t=" + Date.now();
+  $.getJSON(url, function(jsonObj) {
     // Bail early if the result is empty
     if (jsonObj.length == 0) return;
 
-    var completions = jsonObj["completions"];
+    var results = jsonObj["results"];
     var timestamp = jsonObj["timestamp"];
 
     // Check if a more recent request has been received already
@@ -150,25 +153,57 @@ function getCompletions() {
     maxTimestamp = timestamp;
 
     // Remove old completion buttons
-    removeCompletionButtons(completions.length);
+    removeCompletionButtons(results.length);
 
     // Add the new buttons displaying the results sent by the server.
-    for (i=0; i < completions.length; i++) {
-      var currCompletion = completions[i].replace(/ \(alias=(.*?)\)/g, " <i>\($1\)</i>");
+    for (i=0; i < results.length; i++) {
+      var completion = results[i]["completion"];
+      var wiki_completion = results[i]["wikified_completion"];
+      var alias = results[i]["matched_alias"];
+      var qids = results[i]["qids"];
+      var buttonHtml = getCompletionButtonHtml(wiki_completion, alias);
       $("<button/>", {
         class: "comp_buttons",
         id: "button" + i,
         onClick: "handleCompletionButtonClick(this.id)",
         onmousemove: "handleMouseOver(this.id, event)",
-        html: currCompletion
+        html: buttonHtml,
       }).appendTo("#completions");
 
+      $("#button"+i).data("qids", qids);
+      $("#button"+i).data("original", completion);
       $("#button"+i).css("background-color", "white");
     }
 
     // Set the color of the first button to "selected"
     $("#button0").css("background-color", COMPLETION_SELECTED_COLOR);
   })
+}
+
+/* Replace entity mentions in the question by [<QID>]*/
+function getQidQuestion(question, qids) {
+  var qidsArray = qids.split(",");
+  matches = question.match(/\[.*?\]/g);
+  if (matches) {
+    for (i=0; i < matches.length; i++) {
+      // For now assume the user does not enter brackets []
+      question = question.replace(matches[i], "[" + qidsArray[i] + "]");
+    }
+  }
+  return question
+}
+
+function getCompletionButtonHtml(completion, alias) {
+  var buttonHtml = completion;
+  
+  // If the completion was made for an alias, append alias
+  if (alias != "") {
+    buttonHtml = buttonHtml.replace(/\[(.*?)\] $/, " \[$1 <span class='alias'>\(" + alias + "\)</span>\] ");
+  }
+
+  // Use different style for entity mentions --> see .comp_buttons span in css
+  buttonHtml = buttonHtml.replace(/\[(.*?)\]/g, "<span class='entity'>$1</span>");
+  return buttonHtml;
 }
 
 
@@ -185,7 +220,6 @@ function removeCompletionButtons(newResultLength) {
 
 /* Display the results returned by the Aqqu API */
 function displayAqquResults() {
-  console.log("displayAqquResults() called");
   var result = $(".answers").attr("data")
   if (result) {
     numAnswers = jQuery.parseJSON(result).length;

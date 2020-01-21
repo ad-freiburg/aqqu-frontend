@@ -116,6 +116,16 @@ h2 {
     display: inline;
 }
 
+.alias {
+    font-style: italic;
+    color: var(--button-color-light);
+}
+
+.entity {
+    font-weight: bold;
+    color: var(--main-color-dark);
+}
+
 .submit button {
     width: 100px;
     height: 40px;

@@ -33,6 +33,8 @@ app = Flask(__name__)
 def home():
     question = request.args.get("q")
     if question:
+        # Retrieve qids in the question
+        qids = request.args.get("qids")
         # Replace entity mentions by entity name
         aqqu_question = replace_entity_mentions(question)
         # Url encode question to send it to Aqqu API
@@ -65,6 +67,7 @@ def home():
         
         return render_template("index.html",
                                question=question,
+                               qids=qids,
                                interpretations=json.dumps(interpretations),
                                answers=json.dumps(answers),
                                error=error)
@@ -94,13 +97,22 @@ def qac():
         conn.request("GET", PATH_PREFIX_QAC % urlencoded_prefix)
         response = conn.getresponse().read().decode("utf8")
         logger.info("Response: '%s...'" % response[:69])
-        json_obj = json.loads(response)
-        completions = get_completions(json_obj)
-        result = {"completions": completions, "timestamp": timestamp}
+        result = json.loads(response)
+
+        # Replace entity mentions by their wikipedia page title
+        for i, res in enumerate(result["results"]):
+            compl = res["completion"]
+            qids = res["qids"]
+            wikipedia_compl = wikipediafy_qac_result(compl, qids)
+            result["results"][i]["wikified_completion"] = wikipedia_compl
+
+        # Add received timestamp to the result
+        result.update({"timestamp": timestamp})
+
     except socket.error:
         logger.error("Connection to QAC API could not be established")
 
-    # Close connection to QAC Api
+    # Close connection to QAC API
     conn.close()
 
     return json.dumps(result)
@@ -113,7 +125,7 @@ def replace_entity_mentions(question):
     Arguments:
     question - the question string
     """
-    return re.sub(r"\[.*?\|.*?:(.*?)\]", r"\1", question)
+    return re.sub(r"\[(.*?)\]", r"\1", question)
 
 
 def get_answers(json_obj):
@@ -197,15 +209,40 @@ def get_mid_2_name(json_obj):
     return mid_to_name
 
 
-def get_completions(json_obj):
-    """Get completion predictions from the json_object as list of completion
-    strings.
+def wikipediafy_qac_result(completion, qids):
+    """Replace the last entity mention in a qac completion by the corresponding
+    Wikipedia page title. This way, the user can decide which entity they mean.
 
     Arguments:
-    json_obj - json object returned by the QAC API
+    completion - the completion string returned by the QAC API
+    qids - list of qids of entities in the completion returned by the API
     """
-    completions = json_obj["completions"]
-    return [c["completion"] for c in completions]
+    title = ""
+    if len(qids) > 0:
+        qid = qids[-1]
+        if qid in qid_to_wikipedia_info:
+            title, _, _ = qid_to_wikipedia_info[qid]
+            completion = re.sub(r"\[[^\[\]]*?\] $", "[" + title + "] ", completion)
+    return completion
+
+
+def get_wikipedia_mapping(input_file):
+    """Read the QID to Wikipedia page-title, image and abstract from the given
+    input file and return the mapping as dictionary.
+
+    Arguments:
+    input_file - path to the mappings file
+    """
+    mapping = dict()
+    with open(input_file, "r", encoding="utf8") as file:
+        for line in file:
+            qid, title, image, abstract = line.split("\t")
+            abstract = abstract.strip()
+            qid = qid.lower()
+            title = parse.unquote(title)
+            title = title.replace("_", " ")
+            mapping[qid] = (title, image, abstract)
+    return mapping
 
 
 if __name__ == "__main__":
@@ -214,5 +251,6 @@ if __name__ == "__main__":
         exit(1)
 
     port = int(sys.argv[1])
-
+    path = "/nfs/students/natalie-prange/wikidata_mappings/qid_to_wikipedia_info.tsv"
+    qid_to_wikipedia_info = get_wikipedia_mapping(path)
     app.run(threaded=True, host="::", port=port, debug=False)
