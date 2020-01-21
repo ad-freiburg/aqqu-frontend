@@ -1,7 +1,7 @@
 # Aqqu Frontend
 This is an intuitive frontend for Aqqu Question Answering which features Question Auto-Completion.
 
-# Run it with Docker
+## Run with Docker
 Build the docker image and start the container using the following commands:
 
     docker build -t aqqu_frontend .
