@@ -84,16 +84,77 @@ function handleMouseOver(buttonId, event) {
 }
 
 
-/* Set the text of the input field on and set the focus to the
+/* Set the text of the input field and set the focus to the
  * input field on completion prediction button click
  */
 function handleCompletionButtonClick(buttonId) {
+  // data-original is needed since entities in the compleion buttons show the
+  // Wikipedia page title
   var original = $('#'+ buttonId).data("original");
+  var markedHtml = putTextIntoSpans(original);
+  $('#question').html(markedHtml);
+  // Store entity QIDs in the hidden qids input field
   var qids = $('#'+ buttonId).data("qids");
-  $('#question').val(original);
   $('#qids').val(qids);
+  // Store entity names as data of the input field
+  var entities = getEntityNames(markedHtml);
+  $('#question').data("entities", entities);
   // set focus to the end of the input within the input field.
   $('#question').focus();
+  // Update cursor position
+  var component = $('#question')[0];
+  var data = getCaretData(component);
+  setCaretPosition(data);
+  var question = $("#question").html();
+}
+
+
+function getEntityNames(text) {
+  var regex = /<span class="entity">([^<]*?)<\/span>/g
+  var match = regex.exec(text);
+  var entities = [];
+  while (match != null) {
+    entities.push(match[1]);
+    match = regex.exec(text);
+  }
+  return entities;
+}
+
+
+/* Actions to perform on user input in the question input field */
+function handleInput() {
+  // Update the entity spans.
+  var text = $('#question').html();
+  var entities = $('#question').data("entities");
+  var newEntities = [];
+  if (entities) {
+    var currEntities = getEntityNames(text);
+    for (var i = 0; i < entities.length; i++) {
+      // Check if entities are still correct
+      // Note that entities can only be inserted using handleCompletionButtonClick (or when loading the current quesiton from server)
+      if (currEntities[i] != entities[i]) {
+        // TODO: order of entities is not considered during replacement.
+        // Transform entity span with a wrong entity name to a normal-word-span
+        text = text.replace('<span class="entity">' + currEntities[i]+ '<\/span>', '<span>' + currEntities[i] + '</span>');
+        // Remove empty normal-word-spans
+        text = text.replace("<span></span>", "");
+        // Merge adjacent normal-word-spans
+        text = text.replace(/(<span>[^<]*?)<\/span><span>/, "$1");
+      } else {
+        newEntities.push(entities[i]);
+      }
+    }
+  }
+
+  // Update input field text
+  text = text.replace("<br>", "");
+  $('#question').html(text);
+  $('#question').data("entities", newEntities);
+
+  // Update cursor position
+  var component = $('#question')[0];
+  var data = getCaretData(component);
+  setCaretPosition(data);
 }
 
 
@@ -105,7 +166,7 @@ function handleKeyPress(event) {
         enterPressed();
         return;
       }
-      return
+      return;
     case 38:
       // Up arrow: navigate to upper completion
       navigateCompletions(-1);
@@ -127,7 +188,11 @@ function getCompletions() {
   selectedButton = 0;
 
   // Get the current question prefix with entities in the format [<QID>]
-  var question = $("#question").val();
+  var question = $("#question").html();
+  console.log("question: '"+ question + "'");
+  question = question.replace(/<br>/g, "");
+  question = removeHtmlInputField(question);
+  console.log("question wo entities: '"+ question + "'");
   var qids = $("#qids").val();
   if (qids) {
     question = getQidQuestion(question, qids);
@@ -135,7 +200,6 @@ function getCompletions() {
 
   // Globally replace whitespaces with %20 otherwise trailing whitespaces are stripped
   question = encodeURI(question);
-  console.log("question: "+ question);
 
   // Get completions for the current prefix from the server
   var url = URL_PREFIX_QAC + question + "&t=" + Date.now();
@@ -161,7 +225,8 @@ function getCompletions() {
       var wiki_completion = results[i]["wikified_completion"];
       var alias = results[i]["matched_alias"];
       var qids = results[i]["qids"];
-      var buttonHtml = getCompletionButtonHtml(wiki_completion, alias);
+      var buttonHtml = addAlias(wiki_completion, alias);
+      buttonHtml = putTextIntoSpans(buttonHtml);
       $("<button/>", {
         class: "comp_buttons",
         id: "button" + i,
@@ -180,6 +245,7 @@ function getCompletions() {
   })
 }
 
+
 /* Replace entity mentions in the question by [<QID>]*/
 function getQidQuestion(question, qids) {
   var qidsArray = qids.split(",");
@@ -193,20 +259,33 @@ function getQidQuestion(question, qids) {
   return question
 }
 
-function getCompletionButtonHtml(completion, alias) {
-  var buttonHtml = completion;
-  
-  // If the completion was made for an alias, append alias
-  if (alias != "") {
-    buttonHtml = buttonHtml.replace(/\[(.*?)\] $/, " \[$1 <span class='alias'>\(" + alias + "\)</span>\] ");
-  }
 
-  // Use different style for entity mentions --> see .comp_buttons span in css
-  buttonHtml = buttonHtml.replace(/\[(.*?)\]/g, "<span class='entity'>$1</span>");
-  return buttonHtml;
+/* If the completion was made for an alias, append alias */
+function addAlias(completion, alias) {
+  if (alias != "") {
+    completion = completion.replace(/\[(.*?)\] $/, ' \[$1 <span class="alias">\(' + alias + '\)</span>\] ');
+  }
+  return completion
 }
 
 
+/* Mark entities using spans instead of brackets */
+function putTextIntoSpans(text) {
+  text = text.replace(/(\]|^)([^\[\]]*?)(\[)/g, '$1<span>$2</span>$3');
+  text = text.replace(/(\]|^)([^\[\]]*?)($)/g, '$1<span>$2</span>');
+  text = text.replace(/\[(.*?)\]/g, '<span class="entity">$1</span>');
+  return text
+}
+
+
+/* Remove html tags in the input field text and replace entity spans by [] */
+function removeHtmlInputField(text) {
+  text = text.replace(/<span>([^<]*?)<\/span>/g, '$1');
+  return text.replace(/<span class="entity">([^<]*?)<\/span>/g, '\[$1\]');
+}
+
+
+/* Remove completion buttons for a previous question prefix */
 function removeCompletionButtons(newResultLength) {
   // Remove the old buttons
   for (i=0; i < lastResultLen; i++) {
@@ -233,7 +312,7 @@ function displayAqquResults() {
     }
 
     // Re-enable the submit button
-    $("#submit").prop('disabled', false);
+    $("#ask").prop('disabled', false);
   }
 }
 
@@ -394,41 +473,55 @@ function updateNavigationButtons() {
   }
 }
 
+
+/* Copy the question from the contenteditable div to a hidden input field so it
+can be submitted with the form */
+function copyQuestionToInput() {
+  var question = $("#question").text();
+  $("#q").val(question);
+}
+
 // ---------------------- General ---------------------------------------------
 
-/* Helper function to place the cursor of an input field at its end. See
- * https://css-tricks.com/snippets/jquery/move-cursor-to-end-of-textarea-or-input
- */
-jQuery.fn.putCursorAtEnd = function() {
-  return this.each(function() {
-    // Cache references
-    var $el = $(this),
-        el = this;
+/* Get all nodes for the given element */
+function getAllNodes(el){
+  var n;
+  var a = [];
+  var walk = document.createTreeWalker(el, NodeFilter.SHOW_ALL, null, false);
+  while(n=walk.nextNode()) {
+    a.push(n);
+  }
+  return a;
+}
 
-    // Only focus if input isn't already
-    if (!$el.is(":focus")) {
-     $el.focus();
-    }
 
-    // If this function exists... (IE 9+)
-    if (el.setSelectionRange) {
-      // Double the length because Opera is inconsistent about whether a carriage return is one character or two.
-      var len = $el.val().length * 2;
-      
-      // Timeout seems to be required for Blink
-      setTimeout(function() {
-        el.setSelectionRange(len, len);
-      }, 1);
+/* Get last node in the element and the position of the cursor if it was to
+be set to the end of the text */
+function getCaretData(el){
+  var node;
+  var nodes = getAllNodes(el);
+  var position = 0;
+  if (nodes.length > 0) {
+    node = nodes[nodes.length - 1];
+    // If node is empty (e.g. <span></span>) append it still and set pos to 0
+    if (nodes[nodes.length - 1].nodeValue != null) {
+      position = nodes[nodes.length - 1].nodeValue.length;
     } else {
-      // As a fallback, replace the contents with itself
-      // Doesn't work in Chrome, but Chrome supports setSelectionRange
-      $el.val($el.val());
+      position = 0;
     }
+  }
+  return { node: node, position: position };
+}
 
-    // Scroll to the bottom, in case we're in a tall textarea
-    // (Necessary for Firefox and Chrome)
-    this.scrollTop = 999999;
-  });
+
+/* Set caret to the given position in the given node */
+function setCaretPosition(data){
+  var sel = window.getSelection();
+  var range = document.createRange();
+  range.setStart(data.node, data.position);
+  range.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(range);
 }
 
 
@@ -436,15 +529,13 @@ $(document).ready(function(){
   // Focus input field when page is loaded
   $("#question").focus();
 
-  // On focus place cursor at the end of the input field
-  var questionInput = $("#question");
-  questionInput.putCursorAtEnd().on("focus", function() {
-      questionInput.putCursorAtEnd()
+  $("#question").on({
+    'input': handleInput,
   });
 
   // Otherwise, if e.g. the connection to the Aqqu-Api is lost the button could
   // remain disabled even on reload
-  $("#submit").prop('disabled', false);
+  $("#ask").prop('disabled', false);
 
   // Display Aqqu results if the result div exists and is completely loaded
   var resultDiv = $(".result");
@@ -473,9 +564,14 @@ $(document).ready(function(){
 
   // Enter should not submit the question to Aqqu via the form action.
   // Only Enter + Ctrl should.
-  $(document).keydown(function (event) {
-    if(event.keyCode == 13 && !event.ctrlKey) {
-      event.preventDefault();
+  $("#questionForm").keydown(function (event) {
+    if(event.keyCode == 13) {
+      if (!event.ctrlKey) {
+        event.preventDefault();
+      } else {
+        copyQuestionToInput();
+        $("#questionForm").submit();
+      }
     }
   });
 
@@ -486,4 +582,3 @@ $(document).ready(function(){
     }
   });
 });
-

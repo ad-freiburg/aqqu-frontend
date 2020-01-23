@@ -13,33 +13,29 @@
       <h1 id="heading">Aqqu Question Answering</h1>
       <h2> &copy; University of Freiburg, Chair for Algorithms and Data Structures, 2015 - 2020</h2>
       <p>Enter your question:</p>
-      <table class="table">
-        <tr>
-          <form method="get">
-            <td width="90%">
-              <div class="question">
-                <input type="text" id="question" name="q" autocomplete="off" value="{{ question }}"
-                       onkeyup="handleKeyPress(event)" onfocus="getCompletions()">
-                <input type="hidden" id="qids" name="qids" value="{{ qids }}">
+      <div class="container">
+        <form method="get" id="questionForm">
+          <div class="upperrow">
+              <div class="leftcol">
+                <div class="question">
+                  <div contenteditable="true" type="text" id="question" autofocus="true" maxlength="150"
+                         onkeyup="handleKeyPress(event)" onfocus="getCompletions()" data-entities="{{ entities }}">{{ question }}</div>
+                  <input type="hidden" id="q" name="q">
+                  <input type="hidden" id="qids" name="qids" value="{{ qids }}">
+                </div>
               </div>
-            </td>
-            <td width=10%>
-              <div class="submit">
-                <button id="submit">ASK</button>
+              <div class="rightcol">
+                <div class="ask">
+                  <button id="ask" onclick="copyQuestionToInput()">ASK</button>
+                </div>
               </div>
-            </td>
-          </form>
-        </tr>
-        <tr>
-          <td>
-            <div id="completions" class="comp_buttons" data="{{ completions }}"></div>
-          </td>
-          <td>
-          </td>
-        </tr>
-        {% if answers %}
-          <tr align="center">
-            <td>
+          </div>
+        </form>
+        <div class="lowerrow">
+          <div class="leftcol">
+            <div id="completions" class="comp_buttons" data="{{ completions }}">
+            </div>
+            {% if answers %}
               <div class="result">
                 {% if error|length == 0 %}
                   <div>
@@ -63,18 +59,20 @@
                     <p id='caption'></p>
                   </div>
                 {% else %}
-                <p>{{ error }}<p>
-                {% endif %}
+                <p>{{ error }}</p>
+              {% endif %}
               </div>
-            </td>
-            <td>
-            </td>
-          </tr>
-        {% endif %}
-      </table>
-      <form action="http://aqqu.cs.uni-freiburg.de/detailed/">
-        <input id="aqqu_debug" type="submit" value="Debug version >"/>
-      </form>
+            {% endif %}
+          </div>
+          <div class="rightcol">
+            <div class="placeholder">
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+    <form action="http://aqqu.cs.uni-freiburg.de/detailed/">
+      <input id="aqqu_debug" type="submit" value="Debug version >"/>
+    </form>
   </body>
 </html>
