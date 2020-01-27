@@ -14,6 +14,12 @@ var lastMousePositionX = 0;
 var lastMousePositionY = 0;
 var maxTimestamp = 0;
 
+// Regexes
+var inputEntityRegex = /<span class="entity"[^>]*>([^<]*?)<\/span>/g
+
+// Mouseover variables
+var URL_PREFIX_TOOLTIP = basePath + "tooltip?qid=";
+
 // ---------------------- Aqqu related variables ------------------------------
 var MAX_RESULTS = 10;
 var URL_PREFIX_AQQU = basePath;
@@ -91,16 +97,20 @@ function handleCompletionButtonClick(buttonId) {
   // data-original is needed since entities in the compleion buttons show the
   // Wikipedia page title
   var original = $('#'+ buttonId).data("original");
-  var markedHtml = putTextIntoSpans(original);
+  var markedHtml = putTextIntoSpansInput(original);
   $('#question').html(markedHtml);
+
   // Store entity QIDs in the hidden qids input field
   var qids = $('#'+ buttonId).data("qids");
   $('#qids').val(qids);
+
   // Store entity names as data of the input field
   var entities = getEntityNames(markedHtml);
   $('#question').data("entities", entities);
+
   // set focus to the end of the input within the input field.
   $('#question').focus();
+
   // Update cursor position
   var component = $('#question')[0];
   var data = getCaretData(component);
@@ -109,40 +119,77 @@ function handleCompletionButtonClick(buttonId) {
 }
 
 
+/* Get strings within entity spans */
 function getEntityNames(text) {
-  var regex = /<span class="entity">([^<]*?)<\/span>/g
-  var match = regex.exec(text);
+  var matches = text.matchAll(inputEntityRegex);
   var entities = [];
-  while (match != null) {
+  for (const match of matches) {
     entities.push(match[1]);
-    match = regex.exec(text);
   }
   return entities;
 }
 
 
-/* Actions to perform on user input in the question input field */
+/* Get an array of all spans in the given text */
+function getSpansAsArray(text) {
+  // Get end index of each span
+  var regex = /<\/span>/gi;
+  var result;
+  var indices = [];
+  while ( (result = regex.exec(text)) ) {
+    var index = result.index + "</span>".length;
+    indices.push(index);
+  }
+  // Get array of span strings
+  var spans = [];
+  var startIndex = 0;
+  for (var i = 0; i < indices.length; i++) {
+    var currentSpan = text.slice(startIndex, indices[i]);
+    spans.push(currentSpan);
+    startIndex = indices[i];
+  }
+  return spans;
+}
+
+
+/* On user input check if entity spans were touched. If so, remove entity spans
+where the entity name does not match the original entity name anymore */
 function handleInput() {
-  // Update the entity spans.
   var text = $('#question').html();
   var entities = $('#question').data("entities");
   var newEntities = [];
+  var spans = getSpansAsArray(text);
   if (entities) {
     var currEntities = getEntityNames(text);
-    for (var i = 0; i < entities.length; i++) {
-      // Check if entities are still correct
-      // Note that entities can only be inserted using handleCompletionButtonClick (or when loading the current quesiton from server)
-      if (currEntities[i] != entities[i]) {
-        // TODO: order of entities is not considered during replacement.
-        // Transform entity span with a wrong entity name to a normal-word-span
-        text = text.replace('<span class="entity">' + currEntities[i]+ '<\/span>', '<span>' + currEntities[i] + '</span>');
-        // Remove empty normal-word-spans
-        text = text.replace("<span></span>", "");
-        // Merge adjacent normal-word-spans
-        text = text.replace(/(<span>[^<]*?)<\/span><span>/, "$1");
-      } else {
-        newEntities.push(entities[i]);
+    var entityIndex = 0;
+    var entityMismatch = false;
+    var newSpans = [];
+    for (var i = 0; i < spans.length; i++) {
+      var currSpan = spans[i];
+      var match = currSpan.match(inputEntityRegex);
+      if (match != null) {
+        if (currEntities[entityIndex] != entities[entityIndex]) {
+          // Transform entity span where the name does not match the original
+          // entity name into normal word span
+          currSpan = currSpan.replace(/<span class="entity"[^>]*>/, '<span>');
+          entityMismatch = true;
+        } else {
+          newEntities.push(entities[entityIndex]);
+        }
+        entityIndex++;
       }
+      newSpans.push(currSpan);
+      if (entityIndex >= entities.length) break;
+    }
+
+    if (entityMismatch) {
+      text = newSpans.join("");
+      // Remove empty normal-word-spans
+      text = text.replace("<span></span>", "");
+      // Merge adjacent normal-word-spans
+      text = text.replace(/(<span>[^<]*?)<\/span><span>/, "$1");
+      // Reset the tooltip
+      resetTooltip();
     }
   }
 
@@ -278,20 +325,97 @@ function putTextIntoSpans(text) {
 }
 
 
+/* Mark entities using spans instead of brackets */
+function putTextIntoSpansInput(text) {
+  text = text.replace(/(\]|^)([^\[\]]*?)(\[)/g, '$1<span>$2</span>$3');
+  text = text.replace(/(\]|^)([^\[\]]*?)($)/g, '$1<span>$2</span>');
+  var regex = /\[(.*?)\]/;
+  var match = regex.exec(text);
+  var i = 0;
+  while (match != null) {
+      // For now assume the user does not enter brackets []
+      var replStr = '<span class="entity" onmouseleave="hideTooltip()" onmouseenter="handleEntityMouseover('
+                    + i + ', event)">' + match[1] + '</span>'
+      text = text.replace(match[0], replStr);
+      match = regex.exec(text);
+      i++;
+  }
+  return text
+}
+
+
 /* Remove html tags in the input field text and replace entity spans by [] */
 function removeHtmlInputField(text) {
   text = text.replace(/<span>([^<]*?)<\/span>/g, '$1');
-  return text.replace(/<span class="entity">([^<]*?)<\/span>/g, '\[$1\]');
+  text = text.replace(inputEntityRegex, '\[$1\]');
+  return text;
 }
 
 
 /* Remove completion buttons for a previous question prefix */
 function removeCompletionButtons(newResultLength) {
-  // Remove the old buttons
   for (i=0; i < lastResultLen; i++) {
     $('#button' + i).remove();
   }
   lastResultLen = newResultLength;
+}
+
+
+/* Show entity information on mouseover */
+function handleEntityMouseover(index, event) {
+  var qid = $("#qids").val().split(",")[index];
+  var url = URL_PREFIX_TOOLTIP + qid;
+  $.getJSON(url, function(jsonObj) {
+    // Bail early if the result is empty
+    if (jsonObj.length == 0) return;
+
+    // Get necessary information for tooltip from json response
+    var imageUrl = jsonObj["image"];
+    var abstract = jsonObj["abstract"];
+    if (imageUrl == "" && abstract == "") {
+      abstract = "No information found."
+    }
+
+    // Get information about position of the tooltip
+    var tooltipNode = $("#tooltip");
+    var x = event.pageX;
+    var height = tooltipNode.height();
+    var width = tooltipNode.width();
+    var topInput = $("#question").offset().top;
+    var maxHeight = topInput - 20;
+    if (height > maxHeight) {
+      tooltipNode.css("height", maxHeight + "px");
+    }
+
+    // Set content of tooltip
+    tooltipNode.find(".abstract").text(abstract);
+    tooltipNode.find(".img").attr("src", imageUrl);
+
+    // Position tooltip
+    tooltipNode.css("top", topInput - height - 10 + 'px');
+    tooltipNode.css("left", (x - width/2 - 5) + 'px');
+    tooltipNode.css("max-height", maxHeight + 'px');
+
+    // Show tooltip on mouseover
+    tooltipNode.css("visibility", 'visible');
+  });
+}
+
+
+/* Hide the tooltip when the mouse is not hovering over the entity anymore */
+function hideTooltip() {
+  console.log("Remove Tooltip called");
+  var tooltipNode = $("#tooltip");
+  tooltipNode.css("visibility", 'hidden');
+}
+
+
+/* Reset the tooltip by emptying its fields e.g. when the entity was removed */
+function resetTooltip() {
+  var tooltipNode = $("#tooltip");
+  tooltipNode.find(".abstract").text("");
+  tooltipNode.find(".img").attr("src", "");
+  tooltipNode.css("visibility", 'hidden');
 }
 
 
@@ -477,8 +601,10 @@ function updateNavigationButtons() {
 /* Copy the question from the contenteditable div to a hidden input field so it
 can be submitted with the form */
 function copyQuestionToInput() {
-  var question = $("#question").text();
-  $("#q").val(question);
+  var question = $("#question").html();
+  var entityMarkedQuestion = removeHtmlInputField(question);
+  console.log("Question sent to Aqqu: " + entityMarkedQuestion);
+  $("#q").val(entityMarkedQuestion);
 }
 
 // ---------------------- General ---------------------------------------------
@@ -526,6 +652,11 @@ function setCaretPosition(data){
 
 
 $(document).ready(function(){
+  // If a query exists already in the input field, put it into the right format
+  var text = $("#question").text();
+  text = putTextIntoSpansInput(text);
+  $("#question").html(text);
+
   // Focus input field when page is loaded
   $("#question").focus();
 

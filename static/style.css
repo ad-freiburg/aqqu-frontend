@@ -126,6 +126,47 @@ form {
     background-color: transparent;
     color: var(--main-color-dark);
     text-shadow: 1px 1px 1px var(--main-color-dark);
+    position: relative;
+}
+
+#tooltip {
+    text-shadow: 0;
+    visibility: hidden;
+    width: 25%;
+    background-color: #fdfdff;
+    text-align: left;
+    border-radius: 6px;
+    position: absolute;
+    border-color: var(--text-color);
+    border-style: none;
+    border-width: 2px;
+    z-index: 1;
+    box-shadow: 1px 1px var(--text-color-light);
+    display: flex;
+    overflow: hidden;
+
+}
+
+#tooltip p {
+    color: var(--text-color-light);
+    padding: 5px 15px 10px 20px;
+}
+
+#tooltip img {
+    max-width: 40%;
+    max-height: auto;
+    object-fit: cover;
+}
+
+#tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -10px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: var(--text-color-light) transparent transparent transparent;
 }
 
 .comp_buttons button {

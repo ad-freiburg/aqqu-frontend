@@ -64,10 +64,11 @@ def home():
 
         # Close connection to Aqqu API
         conn.close()
-        
+
         return render_template("index.html",
                                question=question,
                                qids=qids,
+                               entities=json.dumps(get_entity_names(question)),
                                interpretations=json.dumps(interpretations),
                                answers=json.dumps(answers),
                                error=error)
@@ -118,14 +119,34 @@ def qac():
     return json.dumps(result)
 
 
+@app.route("/tooltip")
+def tooltip():
+    """Get the Wikipedia information for the given entity.
+    """
+    qid = request.args.get("qid")
+    if qid in qid_to_wikipedia_info:
+        title, image, abstract = qid_to_wikipedia_info[qid]
+    else:
+        title, image, abstract = "", "", ""
+    wiki_info = {"title": title, "image":image, "abstract": abstract}
+    return json.dumps(wiki_info)
+
+
 def replace_entity_mentions(question):
-    """Remove entity mentions in the format [<type>|<qid>:<name>] from the 
-    given question such that only the entity name remains.
+    """Remove entity mentions in the format [<name>] from the given question
+    such that only the entity name remains.
 
     Arguments:
     question - the question string
     """
     return re.sub(r"\[(.*?)\]", r"\1", question)
+
+
+def get_entity_names(question):
+    """Retrieve the entity names from the question
+    """
+    names = re.findall(r"\[(.*?)\]", question)
+    return names
 
 
 def get_answers(json_obj):
