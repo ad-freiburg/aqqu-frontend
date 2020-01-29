@@ -129,7 +129,7 @@ form {
     position: relative;
 }
 
-#tooltip {
+.tooltip {
     text-shadow: 0;
     visibility: hidden;
     width: 25%;
@@ -147,18 +147,18 @@ form {
 
 }
 
-#tooltip p {
+.tooltip p {
     color: var(--text-color-light);
     padding: 5px 15px 10px 20px;
 }
 
-#tooltip img {
+.tooltip img {
     max-width: 40%;
     max-height: auto;
     object-fit: cover;
 }
 
-#tooltip::after {
+.tooltip::after {
   content: "";
   position: absolute;
   top: 100%;

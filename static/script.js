@@ -104,9 +104,18 @@ function handleCompletionButtonClick(buttonId) {
   var qids = $('#'+ buttonId).data("qids");
   $('#qids').val(qids);
 
-  // Store entity names as data of the input field
+  // If entities changed create new tooltips
+  var prevEntities = $('#question').data("entities");
   var entities = getEntityNames(markedHtml);
-  $('#question').data("entities", entities);
+  if (prevEntities != entities) {
+    for (qid of qids) {
+      if (qid != "" && $("#tooltip_" + qid).length == 0) {
+        createTooltip(qid);
+      }
+    }
+    // Store entity names as data of the input field
+    $('#question').data("entities", entities);
+  }
 
   // set focus to the end of the input within the input field.
   $('#question').focus();
@@ -157,6 +166,7 @@ where the entity name does not match the original entity name anymore */
 function handleInput() {
   var text = $('#question').html();
   var entities = $('#question').data("entities");
+  var qids = $("#qids").val().split(",");
   var newEntities = [];
   var spans = getSpansAsArray(text);
   if (entities) {
@@ -169,10 +179,12 @@ function handleInput() {
       var match = currSpan.match(inputEntityRegex);
       if (match != null) {
         if (currEntities[entityIndex] != entities[entityIndex]) {
+          entityMismatch = true;
           // Transform entity span where the name does not match the original
           // entity name into normal word span
           currSpan = currSpan.replace(/<span class="entity"[^>]*>/, '<span>');
-          entityMismatch = true;
+          // Remove the corresponding tooltip
+          removeTooltip(qids[entityIndex]);
         } else {
           newEntities.push(entities[entityIndex]);
         }
@@ -182,14 +194,17 @@ function handleInput() {
       if (entityIndex >= entities.length) break;
     }
 
+    if (currEntities.length == 0 && $(".tooltip")[0]) {
+      // Remove all tooltips if all entities in a prefix were deleted
+      $(".tooltip").remove();
+    }
+
     if (entityMismatch) {
       text = newSpans.join("");
       // Remove empty normal-word-spans
       text = text.replace("<span></span>", "");
       // Merge adjacent normal-word-spans
       text = text.replace(/(<span>[^<]*?)<\/span><span>/, "$1");
-      // Reset the tooltip
-      resetTooltip();
     }
   }
 
@@ -334,8 +349,9 @@ function putTextIntoSpansInput(text) {
   var i = 0;
   while (match != null) {
       // For now assume the user does not enter brackets []
-      var replStr = '<span class="entity" onmouseleave="hideTooltip()" onmouseenter="handleEntityMouseover('
-                    + i + ', event)">' + match[1] + '</span>'
+      var replStr = '<span class="entity" onmouseleave="hideTooltip(' + i +
+                    ')" onmouseenter="showTooltip(' + i + ', event)">' +
+                    match[1] + '</span>'
       text = text.replace(match[0], replStr);
       match = regex.exec(text);
       i++;
@@ -362,59 +378,93 @@ function removeCompletionButtons(newResultLength) {
 
 
 /* Show entity information on mouseover */
-function handleEntityMouseover(index, event) {
+function showTooltip(index, event) {
   var qid = $("#qids").val().split(",")[index];
+  var tooltipId = "tooltip_" + qid;
+  positionTooltip(tooltipId, event.pageX);
+  $("#" + tooltipId).css("visibility", "visible");
+}
+
+
+/* Get abstract and image url for the given QID from server */
+function createTooltip(qid) {
   var url = URL_PREFIX_TOOLTIP + qid;
   $.getJSON(url, function(jsonObj) {
     // Bail early if the result is empty
     if (jsonObj.length == 0) return;
 
     // Get necessary information for tooltip from json response
-    var imageUrl = jsonObj["image"];
+    var image = jsonObj["image"];
     var abstract = jsonObj["abstract"];
-    if (imageUrl == "" && abstract == "") {
-      abstract = "No information found."
-    }
-
-    // Get information about position of the tooltip
-    var tooltipNode = $("#tooltip");
-    var x = event.pageX;
-    var height = tooltipNode.height();
-    var width = tooltipNode.width();
-    var topInput = $("#question").offset().top;
-    var maxHeight = topInput - 20;
-    if (height > maxHeight) {
-      tooltipNode.css("height", maxHeight + "px");
-    }
-
-    // Set content of tooltip
-    tooltipNode.find(".abstract").text(abstract);
-    tooltipNode.find(".img").attr("src", imageUrl);
-
-    // Position tooltip
-    tooltipNode.css("top", topInput - height - 10 + 'px');
-    tooltipNode.css("left", (x - width/2 - 5) + 'px');
-    tooltipNode.css("max-height", maxHeight + 'px');
-
-    // Show tooltip on mouseover
-    tooltipNode.css("visibility", 'visible');
+    createTooltipNode(qid, image, abstract);
   });
 }
 
 
-/* Hide the tooltip when the mouse is not hovering over the entity anymore */
-function hideTooltip() {
-  console.log("Remove Tooltip called");
-  var tooltipNode = $("#tooltip");
-  tooltipNode.css("visibility", 'hidden');
+/* Create a tooltip div. Use QID as ID. One tooltip is sufficient per entity
+even if the entity appears multiple times in the question. In that case the
+tooltip only needs to be repositioned. */
+function createTooltipNode(qid, image, abstract) {
+  var tooltipId = "tooltip_" + qid;
+  // Create div element
+  $("<div/>", {
+    class: "tooltip",
+    id: tooltipId
+  }).appendTo(".question");
+  // Create img element for thumbnail
+  $("<img/>", {
+    class: "image",
+    src: image
+  }).appendTo("#" + tooltipId);
+  // Create p element for abstract
+  $("<p/>", {
+    class: "abstract",
+    text: abstract
+  }).appendTo("#" + tooltipId);
+
+  if (abstract == "") {
+    var p = $("#" + tooltipId).find("p");
+    p.text("No information found");
+    p.css("text-align", "center");
+    if (image == "") {
+      p.css("margin", "auto");
+      $("#" + tooltipId).css("width", "auto");
+    }
+  }
 }
 
 
-/* Reset the tooltip by emptying its fields e.g. when the entity was removed */
-function resetTooltip() {
-  var tooltipNode = $("#tooltip");
-  tooltipNode.find(".abstract").text("");
-  tooltipNode.find(".img").attr("src", "");
+/* Position the tooltip for the given QID above the input field at the current
+mouse x value */
+function positionTooltip(tooltipId, xPos) {
+  // Get information about position of the tooltip
+  var tooltipNode = $("#" + tooltipId);
+  var height = tooltipNode.height();
+  var width = tooltipNode.width();
+  var topInput = $("#question").offset().top;
+  var maxHeight = topInput - 20;
+  if (height > maxHeight) {
+    tooltipNode.css("height", maxHeight + "px");
+    height = maxHeight;
+  }
+
+  // Position tooltip
+  tooltipNode.css("top", topInput - height - 10 + 'px');
+  tooltipNode.css("left", (xPos - width/2 - 5) + 'px');
+  tooltipNode.css("max-height", maxHeight + 'px');
+}
+
+/* Remove tooltip for entity with the given QID */
+function removeTooltip(qid) {
+  $("#tooltip_" + qid).remove();
+}
+
+
+/* Hide the tooltip when the mouse is not hovering over the entity anymore */
+function hideTooltip(index) {
+  var qid = $("#qids").val().split(",")[index];
+  var tooltipId = "tooltip_" + qid;
+  var tooltipNode = $("#" + tooltipId);
   tooltipNode.css("visibility", 'hidden');
 }
 
@@ -662,6 +712,12 @@ $(document).ready(function(){
   // does not.
   var qidsdata = $("#qids").data("qids");
   $("#qids").val(qidsdata);
+  // Create tooltip for each QID
+  for (qid of qidsdata.split(",")) {
+    if (qid != "") {
+      createTooltip(qid);
+    }
+  }
 
   // Focus input field when page is loaded
   $("#question").focus();
