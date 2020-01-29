@@ -657,6 +657,12 @@ $(document).ready(function(){
   text = putTextIntoSpansInput(text);
   $("#question").html(text);
 
+  // Set hidden input qids to data qids. This is needed as for some unknown
+  // reason while the data value gets updated by the server, the input value
+  // does not.
+  var qidsdata = $("#qids").data("qids");
+  $("#qids").val(qidsdata);
+
   // Focus input field when page is loaded
   $("#question").focus();
 

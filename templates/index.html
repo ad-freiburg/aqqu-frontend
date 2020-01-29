@@ -19,13 +19,13 @@
               <div class="leftcol">
                 <div class="question">
                   <div contenteditable="true" type="text" id="question" data-entities="{{ entities }}"
-                         onkeyup="handleKeyPress(event)" onfocus="getCompletions()">{{ question|safe }}</div>
+                         onkeyup="handleKeyPress(event)" onfocus="getCompletions()">{{ question }}</div>
                   <div id="tooltip">
                     <img class="img">
                     <p class="abstract"></p>
                   </div>
                   <input type="hidden" id="q" name="q">
-                  <input type="hidden" id="qids" name="qids" value="{{ qids }}">
+                  <input type="hidden" id="qids" name="qids" value="{{ qids }}" data-qids="{{ qids }}">
                 </div>
               </div>
               <div class="rightcol">
