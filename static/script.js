@@ -428,9 +428,11 @@ function createTooltipNode(qid, image, abstract) {
     var p = $("#" + tooltipId).find("p");
     p.text("No information found");
     p.css("text-align", "center");
+    $("#abstract_" + qid).css("margin", "auto");
     if (image == "") {
-      p.css("margin", "auto");
       $("#" + tooltipId).css("width", "auto");
+      $("#" + tooltipId).find("img").css("min-width", "0");
+      $("#" + tooltipId).find("img").css("width", "0");
     }
   }
 }

@@ -146,18 +146,20 @@ form {
 }
 
 .tooltip div {
-    padding: 5px 10px 5px 20px;
+    padding: 5px 10px 0px 20px;
     overflow: hidden;
+    margin-bottom: 10px;
 }
 
 .tooltip p {
     margin: 0;
     color: var(--text-color-light);
-
+    font-size: 16px;
 }
 
 .tooltip img {
-    max-width: 40%;
+    width: 40%;
+    min-width: 40%;
     max-height: auto;
     object-fit: cover;
 }
