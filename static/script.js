@@ -413,14 +413,16 @@ function createTooltipNode(qid, image, abstract) {
   }).appendTo(".question");
   // Create img element for thumbnail
   $("<img/>", {
-    class: "image",
     src: image
+  }).appendTo("#" + tooltipId);
+  // Create div element for abstract
+  $("<div/>", {
+    id: "abstract_" + qid,
   }).appendTo("#" + tooltipId);
   // Create p element for abstract
   $("<p/>", {
-    class: "abstract",
     text: abstract
-  }).appendTo("#" + tooltipId);
+  }).appendTo("#abstract_" + qid);
 
   if (abstract == "") {
     var p = $("#" + tooltipId).find("p");

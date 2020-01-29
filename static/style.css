@@ -143,13 +143,17 @@ form {
     z-index: 1;
     box-shadow: 1px 1px var(--text-color-light);
     display: flex;
-    overflow: hidden;
+}
 
+.tooltip div {
+    padding: 5px 10px 5px 20px;
+    overflow: hidden;
 }
 
 .tooltip p {
+    margin: 0;
     color: var(--text-color-light);
-    padding: 5px 15px 10px 20px;
+
 }
 
 .tooltip img {
