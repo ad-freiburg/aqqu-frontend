@@ -18,7 +18,7 @@
           <div class="upperrow">
               <div class="leftcol">
                 <div class="question">
-                  <div contenteditable="true" type="text" id="question" data-entities="{{ entities }}"
+                  <div contenteditable="true" type="text" id="question" data-entities="{{ entities }}" spellcheck="false"
                          onkeyup="handleKeyPress(event)" onfocus="getCompletions()">{{ question }}</div>
                   <input type="hidden" id="q" name="q">
                   <input type="hidden" id="qids" name="qids" value="{{ qids }}" data-qids="{{ qids }}">
