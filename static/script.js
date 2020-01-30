@@ -726,6 +726,11 @@ $(document).ready(function(){
   // Focus input field when page is loaded
   $("#question").focus();
 
+  // Set caret to the end of the input
+  var component = $('#question')[0];
+  var data = getCaretData(component);
+  setCaretPosition(data);
+
   $("#question").on({
     'input': handleInput,
   });
