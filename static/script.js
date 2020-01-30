@@ -210,6 +210,9 @@ function handleInput() {
 
   // Update input field text
   text = text.replace("<br>", "");
+  // Prevent Firefox weird-caret-position-bug when all spans are empty by
+  // inserting an invisible character
+  text = text.replace(/^(<span><\/span>)+$/, "<span>&zwnj;</span");
   $('#question').html(text);
   $('#question').data("entities", newEntities);
 
@@ -344,6 +347,10 @@ function putTextIntoSpans(text) {
 function putTextIntoSpansInput(text) {
   text = text.replace(/(\]|^)([^\[\]]*?)(\[)/g, '$1<span>$2</span>$3');
   text = text.replace(/(\]|^)([^\[\]]*?)($)/g, '$1<span>$2</span>');
+  // Prevent Firefox weird-caret-position-bug when all spans are empty by
+  // inserting an invisible character
+  text = text.replace(/^(<span><\/span>)$/, "<span>&zwnj;</span");
+
   var regex = /\[(.*?)\]/;
   var match = regex.exec(text);
   var i = 0;
