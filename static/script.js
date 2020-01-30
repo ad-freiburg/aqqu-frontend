@@ -425,14 +425,19 @@ function createTooltipNode(qid, image, abstract) {
   // Create div element for abstract
   $("<div/>", {
     id: "abstract_" + qid,
+    class: "abstract"
   }).appendTo("#" + tooltipId);
   // Create p element for abstract
   $("<p/>", {
     text: abstract
   }).appendTo("#abstract_" + qid);
+  // Create p element for fadeout overflow
+  $("<p/>", {
+    class: "fadeout"
+  }).appendTo("#abstract_" + qid);
 
   if (abstract == "") {
-    var p = $("#" + tooltipId).find("p");
+    var p = $("#" + tooltipId).find(".abstract");
     p.text("No information found");
     p.css("text-align", "center");
     $("#abstract_" + qid).css("margin", "auto");
