@@ -121,10 +121,7 @@ function handleCompletionButtonClick(buttonId) {
   $('#question').focus();
 
   // Update cursor position
-  var component = $('#question')[0];
-  var data = getCaretData(component);
-  setCaretPosition(data);
-  var question = $("#question").html();
+  placeCaretAtPosition($('#question')[0], -1);
 }
 
 
@@ -164,7 +161,10 @@ function getSpansAsArray(text) {
 /* On user input check if entity spans were touched. If so, remove entity spans
 where the entity name does not match the original entity name anymore */
 function handleInput() {
-  var text = $('#question').html();
+  var originalText = $('#question').html();
+  var originalPos = getCaretCharacterOffsetWithin($('#question')[0]);
+  // Merge nested spans
+  var text = originalText.replace(/(<span[^<>]*>[^<>]*?)<span[^<>]*?>([^<>]*?)<\/span>/, "$1$2");
   var entities = $('#question').data("entities");
   var qids = $("#qids").val().split(",");
   var newEntities = [];
@@ -191,7 +191,6 @@ function handleInput() {
         entityIndex++;
       }
       newSpans.push(currSpan);
-      if (entityIndex >= entities.length) break;
     }
 
     if (currEntities.length == 0 && $(".tooltip")[0]) {
@@ -201,25 +200,37 @@ function handleInput() {
 
     if (entityMismatch) {
       text = newSpans.join("");
-      // Remove empty normal-word-spans
-      text = text.replace("<span></span>", "");
-      // Merge adjacent normal-word-spans
-      text = text.replace(/(<span>[^<]*?)<\/span><span>/, "$1");
     }
   }
 
-  // Update input field text
+  // Remove empty normal-word-spans
+  text = text.replace(/<span><\/span>/g, "");
+
+  // Merge adjacent normal-word-spans recursively
+  var newText = text;
+  do {
+    text = newText;
+    newText = text.replace(/(<span>[^<]*?)<\/span><span>/g, "$1");
+  } while (newText != text)
+
+  // Replace automatically inserted line breaks
   text = text.replace("<br>", "");
+
   // Prevent Firefox weird-caret-position-bug when all spans are empty by
   // inserting an invisible character
-  text = text.replace(/^(<span><\/span>)+$/, "<span>&zwnj;</span");
-  $('#question').html(text);
-  $('#question').data("entities", newEntities);
+  text = text.replace(/^(<span><\/span>)*$/, "<span>\u200c</span>");
 
-  // Update cursor position
-  var component = $('#question')[0];
-  var data = getCaretData(component);
-  setCaretPosition(data);
+  if (text != originalText) {
+    // Update input field text
+    $('#question').html(text);
+    $('#question').data("entities", newEntities);
+
+    // Set caret to the correct position
+    if (text == "<span>\u200c</span>" || $('#question').text().length == originalPos) {
+      originalPos = -1;
+    }
+    placeCaretAtPosition($('#question')[0], originalPos);
+  }
 }
 
 
@@ -349,7 +360,7 @@ function putTextIntoSpansInput(text) {
   text = text.replace(/(\]|^)([^\[\]]*?)($)/g, '$1<span>$2</span>');
   // Prevent Firefox weird-caret-position-bug when all spans are empty by
   // inserting an invisible character
-  text = text.replace(/^(<span><\/span>)$/, "<span>&zwnj;</span");
+  text = text.replace(/^(<span><\/span>)$/, "<span>\u200c</span>");
 
   var regex = /\[(.*?)\]/;
   var match = regex.exec(text);
@@ -675,6 +686,59 @@ function copyQuestionToInput() {
 
 // ---------------------- General ---------------------------------------------
 
+/* In the given component containing one or several text nodes, place the
+caret at the given original position within the text node that this position
+happens to fall into */
+function placeCaretAtPosition(component, position) {
+  var children = getAllNodes(component);
+  if (position == -1) {
+    // Place caret at the end of the input
+    var node = children[children.length - 1];
+    var newPosition = node.nodeValue.length;
+    var data = {node: node, position: newPosition};
+    setCaretPosition(data);
+    return;
+  }
+  var totalLength = 0;
+  for (var i = 0; i < children.length; i++) {
+    if (children[i].nodeValue == null) continue;
+    if (position < totalLength + children[i].nodeValue.length) {
+      var newPosition = position - totalLength
+      var data = {node: children[i], position: newPosition};
+      setCaretPosition(data);
+      break;
+    }
+    totalLength += children[i].nodeValue.length;
+  };
+}
+
+
+/* Get position of the caret within the given element */
+function getCaretCharacterOffsetWithin(element) {
+    var caretOffset = 0;
+    var doc = element.ownerDocument || element.document;
+    var win = doc.defaultView || doc.parentWindow;
+    var sel;
+    if (typeof win.getSelection != "undefined") {
+        sel = win.getSelection();
+        if (sel.rangeCount > 0) {
+            var range = win.getSelection().getRangeAt(0);
+            var preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(element);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            caretOffset = preCaretRange.toString().length;
+        }
+    } else if ( (sel = doc.selection) && sel.type != "Control") {
+        var textRange = sel.createRange();
+        var preCaretTextRange = doc.body.createTextRange();
+        preCaretTextRange.moveToElementText(element);
+        preCaretTextRange.setEndPoint("EndToEnd", textRange);
+        caretOffset = preCaretTextRange.text.length;
+    }
+    return caretOffset;
+}
+
+
 /* Get all nodes for the given element */
 function getAllNodes(el){
   var n;
@@ -684,25 +748,6 @@ function getAllNodes(el){
     a.push(n);
   }
   return a;
-}
-
-
-/* Get last node in the element and the position of the cursor if it was to
-be set to the end of the text */
-function getCaretData(el){
-  var node;
-  var nodes = getAllNodes(el);
-  var position = 0;
-  if (nodes.length > 0) {
-    node = nodes[nodes.length - 1];
-    // If node is empty (e.g. <span></span>) append it still and set pos to 0
-    if (nodes[nodes.length - 1].nodeValue != null) {
-      position = nodes[nodes.length - 1].nodeValue.length;
-    } else {
-      position = 0;
-    }
-  }
-  return { node: node, position: position };
 }
 
 
@@ -739,9 +784,7 @@ $(document).ready(function(){
   $("#question").focus();
 
   // Set caret to the end of the input
-  var component = $('#question')[0];
-  var data = getCaretData(component);
-  setCaretPosition(data);
+  placeCaretAtPosition($('#question')[0], -1);
 
   $("#question").on({
     'input': handleInput,
