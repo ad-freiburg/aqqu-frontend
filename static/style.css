@@ -131,6 +131,7 @@ form {
     color: var(--main-color-dark);
     text-shadow: 1px 1px 1px var(--main-color-dark);
     position: relative;
+    cursor: pointer;
 }
 
 .tooltip {

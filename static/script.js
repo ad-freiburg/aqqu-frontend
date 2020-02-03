@@ -94,15 +94,18 @@ function handleMouseOver(buttonId, event) {
  * input field on completion prediction button click
  */
 function handleCompletionButtonClick(buttonId) {
-  // data-original is needed since entities in the compleion buttons show the
-  // Wikipedia page title
-  var original = $('#'+ buttonId).data("original");
-  var markedHtml = putTextIntoSpansInput(original);
-  $('#question').html(markedHtml);
-
   // Store entity QIDs in the hidden qids input field
   var qids = $('#'+ buttonId).data("qids");
   $('#qids').val(qids);
+
+  // Retrieve entity Wikipedia urls
+  var urls = $('#'+ buttonId).data("urls");
+
+  // data-original is needed since entities in the compleion buttons show the
+  // Wikipedia page title
+  var original = $('#'+ buttonId).data("original");
+  var markedHtml = putTextIntoSpansInput(original, qids, urls);
+  $('#question').html(markedHtml);
 
   // If entities changed create new tooltips
   var prevEntities = $('#question').data("entities");
@@ -301,6 +304,7 @@ function getCompletions() {
       var wiki_completion = results[i]["wikified_completion"];
       var alias = results[i]["matched_alias"];
       var qids = results[i]["qids"];
+      var urls = results[i]["urls"];
       var buttonHtml = addAlias(wiki_completion, alias);
       buttonHtml = putTextIntoSpans(buttonHtml);
       $("<button/>", {
@@ -312,6 +316,7 @@ function getCompletions() {
       }).appendTo("#completions");
 
       $("#button"+i).data("qids", qids);
+      $("#button"+i).data("urls", urls);
       $("#button"+i).data("original", completion);
       $("#button"+i).css("background-color", "white");
     }
@@ -355,7 +360,7 @@ function putTextIntoSpans(text) {
 
 
 /* Mark entities using spans instead of brackets */
-function putTextIntoSpansInput(text) {
+function putTextIntoSpansInput(text, qids, urls) {
   text = text.replace(/(\]|^)([^\[\]]*?)(\[)/g, '$1<span>$2</span>$3');
   text = text.replace(/(\]|^)([^\[\]]*?)($)/g, '$1<span>$2</span>');
   // Prevent Firefox weird-caret-position-bug when all spans are empty by
@@ -366,13 +371,21 @@ function putTextIntoSpansInput(text) {
   var match = regex.exec(text);
   var i = 0;
   while (match != null) {
-      // For now assume the user does not enter brackets []
-      var replStr = '<span class="entity" onmouseleave="hideTooltip(' + i +
-                    ')" onmouseenter="showTooltip(' + i + ', event)">' +
-                    match[1] + '</span>'
-      text = text.replace(match[0], replStr);
-      match = regex.exec(text);
-      i++;
+    var qid = qids[i];
+    var url = urls[i];
+    // For now assume the user does not enter brackets []
+    var replStr = '<span class="entity" id="entity_' + i + '" onmouseleave="hideTooltip(' + i +
+                  ')" onmouseenter="showTooltip(' + i + ', event)" data-qid="'
+                  + qid + '"';
+    if (url) {
+      replStr += ' onclick="window.open(\'' + url + '\')"';
+    } else {
+      replStr += ' style="cursor: default"';
+    }
+    replStr += '>' + match[1] + '</span>';
+    text = text.replace(match[0], replStr);
+    match = regex.exec(text);
+    i++;
   }
   return text
 }
@@ -763,22 +776,25 @@ function setCaretPosition(data){
 
 
 $(document).ready(function(){
-  // If a query exists already in the input field, put it into the right format
-  var text = $("#question").text();
-  text = putTextIntoSpansInput(text);
-  $("#question").html(text);
-
   // Set hidden input qids to data qids. This is needed as for some unknown
   // reason while the data value gets updated by the server, the input value
   // does not.
   var qidsdata = $("#qids").data("qids");
   $("#qids").val(qidsdata);
+  var qids = qidsdata.split(",");
   // Create tooltip for each QID
-  for (qid of qidsdata.split(",")) {
+  for (qid of qids) {
     if (qid != "") {
       createTooltip(qid);
     }
   }
+
+  // If a query exists already in the input field, put it into the right format
+  var urls = $("#question").data("urls");
+  var text = $("#question").text();
+  text = putTextIntoSpansInput(text, qids, urls);
+  $("#question").html(text);
+
 
   // Focus input field when page is loaded
   $("#question").focus();

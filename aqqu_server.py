@@ -35,6 +35,12 @@ def home():
     if question:
         # Retrieve qids in the question
         qids = request.args.get("qids")
+        # Retrieve Wikipedia urls of entities in the question
+        urls = []
+        for qid in qids.split(","):
+            if qid in qid_to_wikipedia_info:
+                title, _, _ = qid_to_wikipedia_info[qid]
+                urls.append(get_url_from_title(title))
         # Replace entity mentions by entity name
         aqqu_question = replace_entity_mentions(question)
         # Url encode question to send it to Aqqu API
@@ -68,6 +74,7 @@ def home():
         return render_template("index.html",
                                question=question,
                                qids=qids,
+                               urls=json.dumps(urls),
                                entities=json.dumps(get_entity_names(question)),
                                interpretations=json.dumps(interpretations),
                                answers=json.dumps(answers),
@@ -104,8 +111,9 @@ def qac():
         for i, res in enumerate(result["results"]):
             compl = res["completion"]
             qids = res["qids"]
-            wikipedia_compl = wikipediafy_qac_result(compl, qids)
+            wikipedia_compl, urls = wikipediafy_qac_result(compl, qids)
             result["results"][i]["wikified_completion"] = wikipedia_compl
+            result["results"][i]["urls"] = urls
 
         # Add received timestamp to the result
         result.update({"timestamp": timestamp})
@@ -239,12 +247,17 @@ def wikipediafy_qac_result(completion, qids):
     qids - list of qids of entities in the completion returned by the API
     """
     title = ""
-    if len(qids) > 0:
-        qid = qids[-1]
+    urls = []
+    for i, qid in enumerate(qids):
         if qid in qid_to_wikipedia_info:
             title, _, _ = qid_to_wikipedia_info[qid]
-            completion = re.sub(r"\[[^\[\]]*?\] $", "[" + title + "] ", completion)
-    return completion
+            urls.append(get_url_from_title(title))
+            if i == len(qids) - 1:
+                title = parse.unquote(title)
+                title = title.replace("_", " ")
+                completion = re.sub(r"\[[^\[\]]*?\] $", "[" + title + "] ",
+                                    completion)
+    return completion, urls
 
 
 def get_wikipedia_mapping(input_file):
@@ -260,10 +273,17 @@ def get_wikipedia_mapping(input_file):
             qid, title, image, abstract = line.split("\t")
             abstract = abstract.strip()
             qid = qid.lower()
-            title = parse.unquote(title)
-            title = title.replace("_", " ")
             mapping[qid] = (title, image, abstract)
     return mapping
+
+
+def get_url_from_title(title):
+    """Get the Wikipedia page url for an entity with the given title
+
+    Arguments:
+    title - title of the entity url encoded, " " replaced by "_"
+    """
+    return "https://en.wikipedia.org/wiki/" + title
 
 
 if __name__ == "__main__":
