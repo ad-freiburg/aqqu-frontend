@@ -831,11 +831,12 @@ $(document).ready(function(){
   $("#question").html(text);
 
 
-  // Focus input field when page is loaded
-  $("#question").focus();
-
-  // Set caret to the end of the input
-  placeCaretAtPosition($('#question')[0], -1);
+  if ($(".result").length == 0) {
+    // Focus input field when page is loaded and no answers are given
+    $("#question").focus();
+    // Set caret to the end of the input
+    placeCaretAtPosition($('#question')[0], -1);
+  }
 
   $("#question").on({
     'input': handleInput,
