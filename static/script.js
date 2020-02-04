@@ -628,6 +628,12 @@ function showMoreResults() {
 
   for (j=MAX_RESULTS; j<currAnswers.length; j++) {
     addAnswerField(currAnswers[j], currIndex, j);
+
+    // Create tooltip
+    var mid = currAnswers[j]["mid"].replace(".", "_");
+    var image = currAnswers[j]["image"];
+    var abstract = currAnswers[j]["abstract"];
+    createTooltipNode(mid, image, abstract, ".answers");
   }
 
   // Show the button for showing less results
