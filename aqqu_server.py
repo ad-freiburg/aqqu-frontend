@@ -181,7 +181,7 @@ def get_answers(json_obj):
                     title, image, abstract = qid_to_wikipedia_info[qid]
                     url = get_url_from_title(title)
             answer = {"name": name, "url": url, "image": image,
-                      "abstract": abstract}
+                      "abstract": abstract, "mid": mid}
             answers.append(answer)
         new_candidates.append(answers)
     return new_candidates

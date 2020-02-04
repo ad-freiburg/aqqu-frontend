@@ -188,7 +188,7 @@ form {
   left: 50%;
   margin-left: -10px;
   border-width: 8px;
-  border-style: solid;
+  border-style: solid solid none solid;
   border-color: var(--text-color-light) transparent transparent transparent;
 }
 

@@ -374,9 +374,9 @@ function putTextIntoSpansInput(text, qids, urls) {
     var qid = qids[i];
     var url = urls[i];
     // For now assume the user does not enter brackets []
-    var replStr = '<span class="entity" id="entity_' + i + '" onmouseleave="hideTooltip(' + i +
-                  ')" onmouseenter="showTooltip(' + i + ', event)" data-qid="'
-                  + qid + '"';
+    var replStr = '<span class="entity" id="entity_' + i + '" onmouseleave="'
+                  + 'hideTooltip(this)" onmouseenter="showTooltip(this, event)"'
+                  + ' data-qid="'+ qid + '"';
     if (url) {
       replStr += ' onclick="window.open(\'' + url + '\')"';
     } else {
@@ -409,10 +409,11 @@ function removeCompletionButtons(newResultLength) {
 
 
 /* Show entity information on mouseover */
-function showTooltip(index, event) {
-  var qid = $("#qids").val().split(",")[index];
+function showTooltip(el, event) {
+  var qid = $(el).data("qid");
   var tooltipId = "tooltip_" + qid;
-  positionTooltip(tooltipId, event.pageX);
+  var parentId = $(el).attr("id");
+  positionTooltip(tooltipId, event.pageX, parentId);
   $("#" + tooltipId).css("visibility", "visible");
 }
 
@@ -427,7 +428,7 @@ function createTooltip(qid) {
     // Get necessary information for tooltip from json response
     var image = jsonObj["image"];
     var abstract = jsonObj["abstract"];
-    createTooltipNode(qid, image, abstract);
+    createTooltipNode(qid, image, abstract, ".question");
   });
 }
 
@@ -435,13 +436,13 @@ function createTooltip(qid) {
 /* Create a tooltip div. Use QID as ID. One tooltip is sufficient per entity
 even if the entity appears multiple times in the question. In that case the
 tooltip only needs to be repositioned. */
-function createTooltipNode(qid, image, abstract) {
+function createTooltipNode(qid, image, abstract, parentId) {
   var tooltipId = "tooltip_" + qid;
   // Create div element
   $("<div/>", {
     class: "tooltip",
     id: tooltipId
-  }).appendTo(".question");
+  }).appendTo(parentId);
   // Create img element for thumbnail
   $("<img/>", {
     src: image
@@ -476,7 +477,7 @@ function createTooltipNode(qid, image, abstract) {
 
 /* Position the tooltip for the given QID above the input field at the current
 mouse x value */
-function positionTooltip(tooltipId, xPos) {
+function positionTooltip(tooltipId, xPos, parentId) {
   // Get information about position of the tooltip
   var tooltipNode = $("#" + tooltipId);
   var height = tooltipNode.height();
@@ -489,7 +490,12 @@ function positionTooltip(tooltipId, xPos) {
   }
 
   // Position tooltip
-  tooltipNode.css("top", topInput - height - 10 + 'px');
+  if (parentId.startsWith("answer")) {
+    var topParent = $("#" + parentId).offset().top;
+    tooltipNode.css("top", topParent - height - 10 + 'px');
+  } else {
+    tooltipNode.css("top", topInput - height - 10 + 'px');
+  }
   tooltipNode.css("left", (xPos - width/2 - 5) + 'px');
   tooltipNode.css("max-height", maxHeight + 'px');
 }
@@ -501,8 +507,8 @@ function removeTooltip(qid) {
 
 
 /* Hide the tooltip when the mouse is not hovering over the entity anymore */
-function hideTooltip(index) {
-  var qid = $("#qids").val().split(",")[index];
+function hideTooltip(el) {
+  var qid = $(el).data("qid");
   var tooltipId = "tooltip_" + qid;
   var tooltipNode = $("#" + tooltipId);
   tooltipNode.css("visibility", 'hidden');
@@ -556,6 +562,7 @@ function showCurrentResult(firstResult) {
     $("#no_answer").css("display", "none");
     // Remove previous answer paragraphs
     $(".answer_fields").remove();
+    $(".answers").find(".tooltip").remove();
   }
   // Update caption
   showCaption(currIndex);
@@ -591,6 +598,12 @@ function showAnswers(index) {
     
     // Add an answer field to the web page
     addAnswerField(currAnswers[j], index, j);
+
+    // Create tooltip
+    var mid = currAnswers[j]["mid"].replace(".", "_");
+    var image = currAnswers[j]["image"];
+    var abstract = currAnswers[j]["abstract"];
+    createTooltipNode(mid, image, abstract, ".answers");
   }
 }
 
@@ -693,15 +706,20 @@ function addAnswerField(answer, candidateIndex, answerIndex) {
       href: answer["url"],
       target: "_blank",
       rel: "noopener",
-      text: answer["name"]
+      text: answer["name"],
+      onmouseenter: "showTooltip(this, event)",
+      onmouseleave: "hideTooltip(this)"
     }).insertBefore("#show_more");
   } else {
     $("<p/>", {
       class: "answer_fields",
       id: fieldId,
-      text: answer["name"]
+      text: answer["name"],
+      onmouseenter: "showTooltip(this, event)",
+      onmouseleave: "hideTooltip(this)"
     }).insertBefore("#show_more");
   }
+  $("#" + fieldId).data("qid", answer["mid"].replace(".", "_"));
 }
 
 
