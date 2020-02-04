@@ -9,6 +9,7 @@
     --button-color: #307ac3;
     --button-color-light: #6ea1d5;
     --button-color-disabled: #B4B4B4;
+    --button-selected-color: #C7D3DF;
 }
 
 html {
@@ -284,6 +285,11 @@ form {
     color: var(--text-color);
     font-size: 20px;
     font-weight: 400;
+    text-decoration: none;
+}
+
+.answers a:hover {
+    background-color: var(--button-selected-color);
 }
 
 .navigation {
@@ -405,6 +411,7 @@ form {
     color: white;
     font-size: 20px;
     font-weight: 500;
+    cursor: pointer;
 }
 
 .more_results #show_more {

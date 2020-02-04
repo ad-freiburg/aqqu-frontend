@@ -589,12 +589,8 @@ function showAnswers(index) {
       break;
     }
     
-    // Add an answer answer field to the web page
-    $("<p/>", {
-      class: "answer_fields",
-      id: "a_"+index+"_"+j,
-      text: currAnswers[j]
-    }).insertBefore("#show_more");
+    // Add an answer field to the web page
+    addAnswerField(currAnswers[j], index, j);
   }
 }
 
@@ -616,9 +612,7 @@ function showMoreResults() {
   $("body").removeClass("more_results");
 
   for (j=MAX_RESULTS; j<currAnswers.length; j++) {
-    // Add an answer field to the web page
-    $("<p class='answer_fields' id='a_" + currIndex + "_" + j + "'>"
-      + currAnswers[j] + "</p>").insertBefore("#show_more");
+    addAnswerField(currAnswers[j], currIndex, j);
   }
 
   // Show the button for showing less results
@@ -633,7 +627,7 @@ function showLessResults() {
 
   for (j=MAX_RESULTS; j<currAnswers.length; j++) {
     // Remove answer field
-    $("#a_"+currIndex+"_"+j).remove();
+    $("#answer_"+currIndex+"_"+j).remove();
   }
 
   // Show the "show_more"- button
@@ -684,6 +678,29 @@ function updateNavigationButtons() {
   } else {
     $('#last').prop('disabled', false);
     $('#next').prop('disabled', false);
+  }
+}
+
+
+/* Add an answer field (link and paragraph) to the web page */
+function addAnswerField(answer, candidateIndex, answerIndex) {
+  // Only use link if url is not empty. Otherwise use paragraph
+  var fieldId = "answer_" + candidateIndex + "_" + answerIndex;
+  if (answer["url"]) {
+    $("<a/>", {
+      class: "answer_fields",
+      id: fieldId,
+      href: answer["url"],
+      target: "_blank",
+      rel: "noopener",
+      text: answer["name"]
+    }).insertBefore("#show_more");
+  } else {
+    $("<p/>", {
+      class: "answer_fields",
+      id: fieldId,
+      text: answer["name"]
+    }).insertBefore("#show_more");
   }
 }
 

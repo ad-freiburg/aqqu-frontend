@@ -136,7 +136,7 @@ def tooltip():
         title, image, abstract = qid_to_wikipedia_info[qid]
     else:
         title, image, abstract = "", "", ""
-    wiki_info = {"title": title, "image":image, "abstract": abstract}
+    wiki_info = {"image": image, "abstract": abstract}
     return json.dumps(wiki_info)
 
 
@@ -164,18 +164,27 @@ def get_answers(json_obj):
     json_obj - json object returned by the Aqqu API
     """
     candidates = json_obj["candidates"]
-    answers = []
-
+    new_candidates = []
     for cand in candidates:
         # Get the names of the answer entities of the candidate
         cand_answers = cand["answers"]
-        ent_names = []
+        answers = []
         for ans in cand_answers:
-            ent_name = ans["name"]
-            ent_names.append(ent_name)
-        answers.append(ent_names)
-
-    return answers
+            name = ans["name"]
+            mid = ""
+            if "mid" in ans:
+                mid = ans["mid"]
+            url, image, abstract = "", "", ""
+            if mid in mid_to_qid:
+                qid = mid_to_qid[mid]
+                if qid in qid_to_wikipedia_info:
+                    title, image, abstract = qid_to_wikipedia_info[qid]
+                    url = get_url_from_title(title)
+            answer = {"name": name, "url": url, "image": image,
+                      "abstract": abstract}
+            answers.append(answer)
+        new_candidates.append(answers)
+    return new_candidates
 
 
 def get_interpretation_strings(json_obj):
@@ -267,6 +276,7 @@ def get_wikipedia_mapping(input_file):
     Arguments:
     input_file - path to the mappings file
     """
+    logger.info("Read wikipedia mapping file %s" % input_file)
     mapping = dict()
     with open(input_file, "r", encoding="utf8") as file:
         for line in file:
@@ -274,6 +284,23 @@ def get_wikipedia_mapping(input_file):
             abstract = abstract.strip()
             qid = qid.lower()
             mapping[qid] = (title, image, abstract)
+    return mapping
+
+
+def get_mid_to_qid_mapping(input_file):
+    """Read the MID to QID mapping from the given input file and return the
+    mapping as dictionary.
+
+    Arguments:
+    input_file - path to the mappings file
+    """
+    logger.info("Read MID to QID file %s" % input_file)
+    mapping = dict()
+    with open(input_file, "r", encoding="utf8") as file:
+        for line in file:
+            mid, qid = line.split("\t")
+            qid = qid.strip().lower()
+            mapping[mid] = qid
     return mapping
 
 
@@ -293,5 +320,7 @@ if __name__ == "__main__":
 
     port = int(sys.argv[1])
     path = "/nfs/students/natalie-prange/wikidata_mappings/qid_to_wikipedia_info.tsv"
+    path_mid = "/nfs/students/natalie-prange/wikidata_mappings/mid_to_qid15.tsv"
     qid_to_wikipedia_info = get_wikipedia_mapping(path)
+    mid_to_qid = get_mid_to_qid_mapping(path_mid)
     app.run(threaded=True, host="::", port=port, debug=False)
