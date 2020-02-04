@@ -13,6 +13,7 @@ var lastResultLen = 0;
 var lastMousePositionX = 0;
 var lastMousePositionY = 0;
 var maxTimestamp = 0;
+var showCompletions = true;
 
 // Regexes
 var inputEntityRegex = /<span class="entity"[^>]*>([^<]*?)<\/span>/g
@@ -240,6 +241,7 @@ function handleInput() {
 
 
 function handleKeyPress(event) {
+  if (!showCompletions) return;
   switch (event.which) {
     case 13:
       if (! event.ctrlKey) {
@@ -265,6 +267,7 @@ function handleKeyPress(event) {
 
 /* Get completions for the current question prefix in the input field */
 function getCompletions() {
+  if (!showCompletions) return;
   // Reset the selected button to 0 so that the selection starts again at the top
   selectedButton = 0;
 
@@ -819,6 +822,25 @@ function setCaretPosition(data){
 
 
 $(document).ready(function(){
+  // Get value for show completions checkbox from Cookie
+  var cookieStr = localStorage.getItem("showCompletions");
+  // Default valu of showCompletions (cookieStr == null) is true
+  showCompletions = cookieStr == "false" ? false : true
+  $('#checkbox').prop("checked", showCompletions);
+
+  // Handle checkbox state change
+  $('#checkbox').change(function() {
+    if ($('#checkbox').is(":checked")) {
+      showCompletions = true;
+      getCompletions();
+    } else {
+      showCompletions = false;
+      removeCompletionButtons(0);
+    }
+    // Store user preference in a Cookie
+    localStorage.setItem("showCompletions", showCompletions);
+  });
+
   // Set hidden input qids to data qids. This is needed as for some unknown
   // reason while the data value gets updated by the server, the input value
   // does not.
