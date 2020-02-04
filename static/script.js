@@ -416,6 +416,7 @@ function showTooltip(el, event) {
   var tooltipId = "tooltip_" + qid;
   var parentId = $(el).attr("id");
   positionTooltip(tooltipId, event.pageX, parentId);
+  $("#" + tooltipId).css("display", "flex");
   $("#" + tooltipId).css("visibility", "visible");
 }
 
@@ -462,7 +463,6 @@ function createTooltipNode(qid, image, abstract, parentId) {
   $("<p/>", {
     class: "fadeout"
   }).appendTo("#abstract_" + qid);
-
   if (abstract == "") {
     var p = $("#" + tooltipId).find(".abstract");
     p.text("No information found");
