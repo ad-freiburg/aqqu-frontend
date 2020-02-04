@@ -164,6 +164,8 @@ function getSpansAsArray(text) {
 /* On user input check if entity spans were touched. If so, remove entity spans
 where the entity name does not match the original entity name anymore */
 function handleInput() {
+  // If answers are currently shown - remove it
+  $(".result").remove();
   var originalText = $('#question').html();
   var originalPos = getCaretCharacterOffsetWithin($('#question')[0]);
   // Merge nested spans
