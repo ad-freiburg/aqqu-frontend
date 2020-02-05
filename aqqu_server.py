@@ -8,6 +8,7 @@ import logging
 import http.client
 import socket
 import json
+import argparse
 from urllib import parse
 from flask import Flask, render_template, request
 
@@ -314,13 +315,22 @@ def get_url_from_title(title):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python3 %s <port>" % sys.argv[0])
-        exit(1)
+    # Parse command line arguments
+    default_path = "/nfs/students/natalie-prange/wikidata_mappings/"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("port",
+                        help="Specify port on which to run the server")
+    parser.add_argument("-d", "--data", default=default_path,
+                        help="Specify path on which to look for data files")
 
-    port = int(sys.argv[1])
-    path = "/nfs/students/natalie-prange/wikidata_mappings/qid_to_wikipedia_info.tsv"
-    path_mid = "/nfs/students/natalie-prange/wikidata_mappings/mid_to_qid15.tsv"
-    qid_to_wikipedia_info = get_wikipedia_mapping(path)
-    mid_to_qid = get_mid_to_qid_mapping(path_mid)
+    args = parser.parse_args()
+    port = args.port
+    data_path = args.data.rstrip("/") + "/"
+
+    # Load data
+    wiki_info_file = data_path + "qid_to_wikipedia_info.tsv"
+    qid_to_wikipedia_info = get_wikipedia_mapping(wiki_info_file)
+    mid_to_qid_file = data_path + "mid_to_qid15.tsv"
+    mid_to_qid = get_mid_to_qid_mapping(mid_to_qid_file)
+
     app.run(threaded=True, host="::", port=port, debug=False)

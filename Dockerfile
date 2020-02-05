@@ -1,22 +1,16 @@
-FROM ubuntu:18.04
-MAINTAINER Natalie Prange <prangen@informatik.uni-freiburg.de>
+FROM python:3.8
+LABEL maintainer="prange@informatik.uni-freiburg.de"
+ENV PYTHONIOENCODING=utf-8
 
-RUN apt-get update && apt-get install -y make vim python3-pip
-
-COPY bashrc bashrc
-COPY Makefile /home/Makefile
+# Install python packages
 COPY requirements.txt /home/requirements.txt
+RUN pip3 install -r /home/requirements.txt
+
 COPY *.py /home/
 COPY templates /home/templates
 COPY static /home/static
 
-# Set the python encoding
-ENV PYTHONIOENCODING=ISO-8859-1
-
-# Install python packages
-RUN pip3 install -r /home/requirements.txt
-
-CMD ["/bin/bash", "--rcfile", "bashrc"]
+CMD ["python3", "/home/aqqu_server.py", "80", "-d", "/data/"]
 
 # docker build -t aqqu_frontend .
-# docker run --rm -it -p 8182:80 aqqu_frontend
+# docker run --rm -it -p 8182:80 --read-only -v /nfs/students/natalie-prange/wikidata_mappings:/data aqqu_frontend
