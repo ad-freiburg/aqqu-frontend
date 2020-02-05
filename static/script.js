@@ -608,7 +608,9 @@ function showAnswers(index) {
     var mid = currAnswers[j]["mid"].replace(".", "_");
     var image = currAnswers[j]["image"];
     var abstract = currAnswers[j]["abstract"];
-    createTooltipNode(mid, image, abstract, ".answers");
+    if ($("#tooltip_" + mid).length == 0) {
+      createTooltipNode(mid, image, abstract, ".answers");
+    }
   }
 }
 
@@ -636,7 +638,9 @@ function showMoreResults() {
     var mid = currAnswers[j]["mid"].replace(".", "_");
     var image = currAnswers[j]["image"];
     var abstract = currAnswers[j]["abstract"];
-    createTooltipNode(mid, image, abstract, ".answers");
+    if ($("#tooltip_" + mid).length == 0) {
+      createTooltipNode(mid, image, abstract, ".answers");
+    }
   }
 
   // Show the button for showing less results
