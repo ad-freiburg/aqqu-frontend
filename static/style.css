@@ -158,11 +158,9 @@ form {
     text-align: left;
     border-radius: 6px;
     position: absolute;
-    border-color: var(--text-color);
     border-style: none;
-    border-width: 2px;
     z-index: 1;
-    box-shadow: 1px 1px var(--text-color-light);
+    box-shadow: 0px 0px 20px var(--text-color-light);
     display: none;
 }
 
