@@ -450,8 +450,9 @@ function createTooltipNode(qid, image, abstract, parentId) {
     id: tooltipId
   }).appendTo(parentId);
   // Create img element for thumbnail
+  if (image.length > 0) image += "?width=400px"
   $("<img/>", {
-    src: image + "?width=400px"
+    src: image
   }).appendTo("#" + tooltipId);
   // Create div element for abstract
   $("<div/>", {
