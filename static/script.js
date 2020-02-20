@@ -864,6 +864,22 @@ $(document).ready(function(){
   text = putTextIntoSpansInput(text, qids, urls);
   $("#question").html(text);
 
+  // If the input field looses focus and the field contains no text add
+  // placeholder text
+  $("#question").focusout(function(){
+    var element = $(this);
+    if (!element.text().replace(" ", "").replace("\u200c", "").length) {
+      element.empty();
+    }
+  });
+  $("#question").focusin(function(){
+    var element = $(this);
+    if (!element.text().replace(" ", "").replace("\u200c", "").length) {
+      text = putTextIntoSpansInput("", [], []);
+      $("#question").html(text);
+      placeCaretAtPosition($('#question')[0], -1);
+    }
+  });
 
   if ($(".result").length == 0) {
     // Focus input field when page is loaded and no answers are given

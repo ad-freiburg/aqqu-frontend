@@ -5,6 +5,7 @@
     --accent-color: #42a5f5;
     --text-color: #0d1a26;
     --text-color-light: #64727f;
+    --text-color-placeholder: #a2aab2;
     --border-color-light: #bebebe;
     --button-color: #307ac3;
     --button-color-light: #6ea1d5;
@@ -140,6 +141,15 @@ form {
 
 #question span {
     color: var(--text-color);
+}
+
+[placeholder]:empty::before {
+    content: attr(placeholder);
+    color: var(--text-color-placeholder);
+}
+
+[placeholder]:empty:focus::before {
+    content: "";
 }
 
 .entity {
