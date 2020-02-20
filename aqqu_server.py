@@ -76,7 +76,6 @@ def home():
                                question=question,
                                qids=qids,
                                urls=json.dumps(urls),
-                               entities=json.dumps(get_entity_names(question)),
                                interpretations=json.dumps(interpretations),
                                answers=json.dumps(answers),
                                error=error)
@@ -149,13 +148,6 @@ def replace_entity_mentions(question):
     question - the question string
     """
     return re.sub(r"\[(.*?)\]", r"\1", question)
-
-
-def get_entity_names(question):
-    """Retrieve the entity names from the question
-    """
-    names = re.findall(r"\[(.*?)\]", question)
-    return names
 
 
 def get_answers(json_obj):

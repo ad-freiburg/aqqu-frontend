@@ -17,6 +17,8 @@ var showCompletions = true;
 
 // Regexes
 var inputEntityRegex = /<span class="entity"[^>]*>([^<]*?)<\/span>/g
+var inputEntityOriginalRegex = /<span class="entity"[^>]*data-original="(.*?)"[^>]*>[^<]*?<\/span>/g
+var inputEntityQidRegex = /<span class="entity"[^>]*data-qid="(.*?)"[^>]*>[^<]*?<\/span>/g
 
 // Mouseover variables
 var URL_PREFIX_TOOLTIP = basePath + "tooltip?qid=";
@@ -97,10 +99,12 @@ function handleMouseOver(buttonId, event) {
 function handleCompletionButtonClick(buttonId) {
   // Store entity QIDs in the hidden qids input field
   var qids = $('#'+ buttonId).data("qids");
-  $('#qids').val(qids);
 
   // Retrieve entity Wikipedia urls
   var urls = $('#'+ buttonId).data("urls");
+
+  // Retrieve entities from previous question
+  var prevEntities = getEntityOriginals($("#question").html());
 
   // data-original is needed since entities in the compleion buttons show the
   // Wikipedia page title
@@ -109,7 +113,6 @@ function handleCompletionButtonClick(buttonId) {
   $('#question').html(markedHtml);
 
   // If entities changed create new tooltips
-  var prevEntities = $('#question').data("entities");
   var entities = getEntityNames(markedHtml);
   if (prevEntities != entities) {
     for (qid of qids) {
@@ -117,8 +120,6 @@ function handleCompletionButtonClick(buttonId) {
         createTooltip(qid);
       }
     }
-    // Store entity names as data of the input field
-    $('#question').data("entities", entities);
   }
 
   // set focus to the end of the input within the input field.
@@ -137,6 +138,28 @@ function getEntityNames(text) {
     entities.push(match[1]);
   }
   return entities;
+}
+
+
+/* Get original entity names from entity span data */
+function getEntityOriginals(text) {
+  var matches = text.matchAll(inputEntityOriginalRegex);
+  var originals = [];
+  for (const match of matches) {
+    originals.push(match[1]);
+  }
+  return originals;
+}
+
+
+/* Get entity QIDs from entity span data */
+function getEntityQids(text) {
+  var matches = text.matchAll(inputEntityQidRegex);
+  var qids = [];
+  for (const match of matches) {
+    qids.push(match[1]);
+  }
+  return qids;
 }
 
 
@@ -169,44 +192,38 @@ function handleInput() {
   $(".result").remove();
   var originalText = $('#question').html();
   var originalPos = getCaretCharacterOffsetWithin($('#question')[0]);
+
   // Merge nested spans
   var text = originalText.replace(/(<span[^<>]*>[^<>]*?)<span[^<>]*?>([^<>]*?)<\/span>/, "$1$2");
-  var entities = $('#question').data("entities");
-  var qids = $("#qids").val().split(",");
-  var newEntities = [];
+
+  // Remove entity spans of edited entities
   var spans = getSpansAsArray(text);
-  if (entities) {
-    var currEntities = getEntityNames(text);
-    var entityIndex = 0;
-    var entityMismatch = false;
-    var newSpans = [];
-    for (var i = 0; i < spans.length; i++) {
-      var currSpan = spans[i];
-      var match = currSpan.match(inputEntityRegex);
-      if (match != null) {
-        if (currEntities[entityIndex] != entities[entityIndex]) {
-          entityMismatch = true;
-          // Transform entity span where the name does not match the original
-          // entity name into normal word span
-          currSpan = currSpan.replace(/<span class="entity"[^>]*>/, '<span>');
-          // Remove the corresponding tooltip
-          removeTooltip(qids[entityIndex]);
-        } else {
-          newEntities.push(entities[entityIndex]);
-        }
-        entityIndex++;
+  var currEntities = getEntityNames(text);
+  var entityMismatch = false;
+  var newSpans = [];
+  for (var i = 0; i < spans.length; i++) {
+    var matches = spans[i].matchAll(inputEntityRegex);
+    for (const match of matches) {
+      if (match[1] != getEntityOriginals(match[0])[0]) {
+        // Remove corresponding tooltip
+        var qid = spans[i].match(/data-qid="(.*?)"/g)[1];
+        removeTooltip(qid);
+        // Transform entity span where the name does not match the original
+        // entity name into normal word span
+        spans[i] = spans[i].replace(/<span class="entity"[^>]*>/, '<span>');
+        entityMismatch = true;
       }
-      newSpans.push(currSpan);
     }
+    newSpans.push(spans[i]);
+  }
 
-    if (currEntities.length == 0 && $(".tooltip")[0]) {
-      // Remove all tooltips if all entities in a prefix were deleted
-      $(".tooltip").remove();
-    }
+  // Remove all tooltips if all entities in a prefix were deleted
+  if (currEntities.length == 0 && $(".tooltip")[0]) {
+    $(".tooltip").remove();
+  }
 
-    if (entityMismatch) {
-      text = newSpans.join("");
-    }
+  if (entityMismatch) {
+    text = newSpans.join("");
   }
 
   // Remove empty normal-word-spans
@@ -229,7 +246,6 @@ function handleInput() {
   if (text != originalText) {
     // Update input field text
     $('#question').html(text);
-    $('#question').data("entities", newEntities);
 
     // Set caret to the correct position
     if (text == "<span>\u200c</span>" || $('#question').text().length == originalPos) {
@@ -274,10 +290,10 @@ function getCompletions() {
   // Get the current question prefix with entities in the format [<QID>]
   var question = $("#question").html();
   console.log("question: '"+ question + "'");
+  var qids = getEntityQids(question);
   question = question.replace(/<br>/g, "");
   question = removeHtmlInputField(question);
   console.log("question wo entities: '"+ question + "'");
-  var qids = $("#qids").val();
   if (qids) {
     question = getQidQuestion(question, qids);
   }
@@ -334,12 +350,11 @@ function getCompletions() {
 
 /* Replace entity mentions in the question by [<QID>]*/
 function getQidQuestion(question, qids) {
-  var qidsArray = qids.split(",");
   matches = question.match(/\[.*?\]/g);
   if (matches) {
     for (i=0; i < matches.length; i++) {
       // For now assume the user does not enter brackets []
-      question = question.replace(matches[i], "[" + qidsArray[i] + "]");
+      question = question.replace(matches[i], "[" + qids[i] + "]");
     }
   }
   return question
@@ -381,7 +396,7 @@ function putTextIntoSpansInput(text, qids, urls) {
     // For now assume the user does not enter brackets []
     var replStr = '<span class="entity" id="entity_' + i + '" onmouseleave="'
                   + 'hideTooltip(this)" onmouseenter="showTooltip(this, event)"'
-                  + ' data-qid="'+ qid + '"';
+                  + ' data-qid="'+ qid + '" data-original="' + match[1] + '"';
     if (url) {
       replStr += ' onclick="window.open(\'' + url + '\')"';
     } else {
@@ -746,6 +761,8 @@ function copyQuestionToInput() {
   var entityMarkedQuestion = removeHtmlInputField(question);
   console.log("Question sent to Aqqu: " + entityMarkedQuestion);
   $("#q").val(entityMarkedQuestion);
+  var qids = getEntityQids(question);
+  $("#qids").val(qids.join(","));
 }
 
 // ---------------------- General ---------------------------------------------
