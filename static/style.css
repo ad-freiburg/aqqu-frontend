@@ -143,6 +143,16 @@ form {
     color: var(--text-color);
 }
 
+#question[contenteditable="false"] {
+    border-color: var(--button-color-disabled);
+    background-color: #f3f6f8;
+    color: var(--text-color-light);
+}
+
+#question[contenteditable="false"] span {
+    color: var(--text-color-light);
+}
+
 [placeholder]:empty::before {
     content: attr(placeholder);
     color: var(--text-color-placeholder);

@@ -260,6 +260,10 @@ function handleKeyPress(event) {
         return;
       }
       return;
+    case 17:
+      // Ctrl: do nothing: prevent default to avoid call to getCompletions on
+      // submit
+      return;
     case 38:
       // Up arrow: navigate to upper completion
       navigateCompletions(-1);
@@ -751,13 +755,18 @@ function addAnswerField(answer, candidateIndex, answerIndex) {
 
 /* Copy the question from the contenteditable div to a hidden input field so it
 can be submitted with the form */
-function copyQuestionToInput() {
+function onSubmitQuestion() {
   var question = $("#question").html();
   var entityMarkedQuestion = removeHtmlInputField(question);
   console.log("Question sent to Aqqu: " + entityMarkedQuestion);
   $("#q").val(entityMarkedQuestion);
   var qids = getEntityQids(question);
   $("#qids").val(qids.join(","));
+  $("#question").prop("contenteditable", false);
+  $("#ask").prop("disabled", true);
+  removeCompletionButtons(0);
+  $("#questionForm").submit();
+  return true;
 }
 
 // ---------------------- General ---------------------------------------------
@@ -941,8 +950,7 @@ $(document).ready(function(){
       if (!event.ctrlKey) {
         event.preventDefault();
       } else {
-        copyQuestionToInput();
-        $("#questionForm").submit();
+        onSubmitQuestion();
       }
     }
   });
