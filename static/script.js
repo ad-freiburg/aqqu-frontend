@@ -99,6 +99,7 @@ function handleMouseOver(buttonId, event) {
 function handleCompletionButtonClick(buttonId) {
   // Store entity QIDs in the hidden qids input field
   var qids = $('#'+ buttonId).data("qids");
+  $("#qids").val(qids);
 
   // Retrieve entity Wikipedia urls
   var urls = $('#'+ buttonId).data("urls");
@@ -113,7 +114,7 @@ function handleCompletionButtonClick(buttonId) {
   $('#question').html(markedHtml);
 
   // If entities changed create new tooltips
-  var entities = getEntityNames(markedHtml);
+  var entities = getEntityOriginals(markedHtml);
   if (prevEntities != entities) {
     for (qid of qids) {
       if (qid != "" && $("#tooltip_" + qid).length == 0) {
@@ -127,17 +128,6 @@ function handleCompletionButtonClick(buttonId) {
 
   // Update cursor position
   placeCaretAtPosition($('#question')[0], -1);
-}
-
-
-/* Get strings within entity spans */
-function getEntityNames(text) {
-  var matches = text.matchAll(inputEntityRegex);
-  var entities = [];
-  for (const match of matches) {
-    entities.push(match[1]);
-  }
-  return entities;
 }
 
 
@@ -194,20 +184,17 @@ function handleInput() {
   var originalPos = getCaretCharacterOffsetWithin($('#question')[0]);
 
   // Merge nested spans
-  var text = originalText.replace(/(<span[^<>]*>[^<>]*?)<span[^<>]*?>([^<>]*?)<\/span>/, "$1$2");
+  var nestedSpanRegex = /<span[^<>]*>([^<>]*?)<span[^<>]*?>([^<>]*?)<\/span>/;
+  var text = originalText.replace(nestedSpanRegex, "<span>$1$2<\/span>");
 
   // Remove entity spans of edited entities
   var spans = getSpansAsArray(text);
-  var currEntities = getEntityNames(text);
   var entityMismatch = false;
   var newSpans = [];
   for (var i = 0; i < spans.length; i++) {
     var matches = spans[i].matchAll(inputEntityRegex);
     for (const match of matches) {
       if (match[1] != getEntityOriginals(match[0])[0]) {
-        // Remove corresponding tooltip
-        var qid = spans[i].match(/data-qid="(.*?)"/g)[1];
-        removeTooltip(qid);
         // Transform entity span where the name does not match the original
         // entity name into normal word span
         spans[i] = spans[i].replace(/<span class="entity"[^>]*>/, '<span>');
@@ -215,11 +202,6 @@ function handleInput() {
       }
     }
     newSpans.push(spans[i]);
-  }
-
-  // Remove all tooltips if all entities in a prefix were deleted
-  if (currEntities.length == 0 && $(".tooltip")[0]) {
-    $(".tooltip").remove();
   }
 
   if (entityMismatch) {
@@ -253,6 +235,17 @@ function handleInput() {
     }
     placeCaretAtPosition($('#question')[0], originalPos);
   }
+
+  // Remove tooltips for entities that were deleted
+  var prevQids = $("#qids").val().split(",");
+  var qids = getEntityQids(text);
+  for (const qid of prevQids) {
+    if (qid.length > 0 && !qids.includes(qid)) {
+      removeTooltip(qid);
+    }
+  }
+  // Update qids
+  $("#qids").val(qids.join(""));
 }
 
 
