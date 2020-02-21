@@ -253,6 +253,8 @@ def wikipediafy_qac_result(completion, qids):
     for i, qid in enumerate(qids):
         if qid in qid_to_wikipedia_info:
             title, _, _ = qid_to_wikipedia_info[qid]
+            if not title:
+                continue
             urls.append(get_url_from_title(title))
             if i == len(qids) - 1:
                 title = parse.unquote(title)
@@ -322,7 +324,7 @@ if __name__ == "__main__":
     # Load data
     wiki_info_file = data_path + "qid_to_wikipedia_info.tsv"
     qid_to_wikipedia_info = get_wikipedia_mapping(wiki_info_file)
-    mid_to_qid_file = data_path + "mid_to_qid15.tsv"
+    mid_to_qid_file = data_path + "mid_to_qid15_combined.tsv"
     mid_to_qid = get_mid_to_qid_mapping(mid_to_qid_file)
 
     app.run(threaded=True, host="::", port=port, debug=False)
