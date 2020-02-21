@@ -128,6 +128,7 @@ function handleCompletionButtonClick(buttonId) {
 
   // Update cursor position
   placeCaretAtPosition($('#question')[0], -1);
+  $('#question').scrollLeft(10000);
 }
 
 
