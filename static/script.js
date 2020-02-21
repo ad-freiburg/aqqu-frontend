@@ -219,8 +219,11 @@ function handleInput() {
     newText = text.replace(/(<span>[^<]*?)<\/span><span>/g, "$1");
   } while (newText != text)
 
-  // Replace automatically inserted line breaks
+  // Remove automatically inserted line breaks
   text = text.replace("<br>", "");
+
+  // Remove automatically inserted font color tags
+  text = text.replace(/<font[^<>]*?>([^<>]*?)<\/font>/g, "$1");
 
   // Prevent Firefox weird-caret-position-bug when all spans are empty by
   // inserting an invisible character

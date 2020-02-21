@@ -5,6 +5,7 @@
     --accent-color: #42a5f5;
     --text-color: #0d1a26;
     --text-color-light: #64727f;
+    --text-color-medium: #464f58;
     --text-color-placeholder: #a2aab2;
     --border-color-light: #bebebe;
     --button-color: #307ac3;
@@ -139,8 +140,8 @@ form {
     white-space: pre;
 }
 
-#question span {
-    color: var(--text-color);
+#question .entity {
+  color: var(--main-color-dark);
 }
 
 #question[contenteditable="false"] {
@@ -149,8 +150,8 @@ form {
     color: var(--text-color-light);
 }
 
-#question[contenteditable="false"] span {
-    color: var(--text-color-light);
+#question[contenteditable="false"] .entity {
+    color: var(--text-color-medium);
 }
 
 [placeholder]:empty::before {
@@ -165,7 +166,6 @@ form {
 .entity {
     background-color: transparent;
     color: var(--main-color-dark);
-    text-shadow: 1px 1px 1px var(--main-color-dark);
     position: relative;
     cursor: pointer;
 }
