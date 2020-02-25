@@ -209,8 +209,8 @@ function handleInput() {
     text = newSpans.join("");
   }
 
-  // Remove empty normal-word-spans
-  text = text.replace(/<span><\/span>/g, "");
+  // Remove empty normal-word-spans unless it's the last span
+  text = text.replace(/<span><\/span>([^$])/g, "$1");
 
   // Merge adjacent normal-word-spans recursively
   var newText = text;
