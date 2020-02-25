@@ -1,7 +1,6 @@
 :root {
     --main-color: #1a237e;
     --main-color-light: #534bae;
-    --main-color-dark: #000051;
     --accent-color: #42a5f5;
     --text-color: #0d1a26;
     --text-color-light: #64727f;
@@ -25,18 +24,18 @@ body {
 }
 
 p {
-    color: var(--main-color-dark);
+    color: var(--main-color);
 }
 
 h1 {
-    color: var(--main-color-dark);
+    color: var(--main-color);
     font-weight: 500;
     font-size: 60px;
     margin-bottom: 0px;
 }
 
 h2 {
-    color: var(--main-color-dark);
+    color: var(--main-color);
     font-weight: 400;
     font-size: 19px;
     margin-bottom: 70px;
@@ -73,7 +72,7 @@ form {
 }
 
 .toprow label {
-    color: var(--main-color-dark);
+    color: var(--main-color);
     padding-right: 4px;
 }
 
@@ -118,7 +117,7 @@ form {
     border-style: solid;
     border-width: 1px;
     color: var(--text-color);
-    border-color: var(--main-color-dark);
+    border-color: var(--main-color);
     font-size: 20px;
     font-weight: 400;
     height: 32px;
@@ -141,7 +140,7 @@ form {
 }
 
 #question .entity {
-  color: var(--main-color-dark);
+  color: var(--main-color);
 }
 
 #question[contenteditable="false"] {
@@ -165,7 +164,7 @@ form {
 
 .entity {
     background-color: transparent;
-    color: var(--main-color-dark);
+    color: var(--main-color);
     position: relative;
     cursor: pointer;
 }
