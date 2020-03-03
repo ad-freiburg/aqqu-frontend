@@ -257,8 +257,6 @@ def wikipediafy_qac_result(completion, qids):
                 continue
             urls.append(get_url_from_title(title))
             if i == len(qids) - 1:
-                title = parse.unquote(title)
-                title = title.replace("_", " ")
                 completion = re.sub(r"\[[^\[\]]*?\] $", "[" + title + "] ",
                                     completion)
     return completion, urls
@@ -305,6 +303,7 @@ def get_url_from_title(title):
     Arguments:
     title - title of the entity url encoded, " " replaced by "_"
     """
+    title = parse.quote(title).replace(" ", "_")
     return "https://en.wikipedia.org/wiki/" + title
 
 
