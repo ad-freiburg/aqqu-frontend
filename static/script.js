@@ -996,4 +996,10 @@ $(document).ready(function(){
         event.preventDefault();
     }
   });
+
+  // When redirecting to detailed Aqqu insert current question into input field
+  $("#detailed_aqqu").on("click", function(event){
+    var question = $("#question").text();
+    $("#detailed_aqqu_query").val(question)
+  });
 });

@@ -96,7 +96,7 @@ form {
     flex: 1;
 }
 
-#aqqu_debug {
+#detailed_aqqu input {
     display: block;
     background-color: var(--button-color);
     border: 3px solid var(--button-color-light);
