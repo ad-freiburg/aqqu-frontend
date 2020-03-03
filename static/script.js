@@ -129,6 +129,12 @@ function handleCompletionButtonClick(buttonId) {
   // Update cursor position
   placeCaretAtPosition($('#question')[0], -1);
   $('#question').scrollLeft(10000);
+
+  // Submit question if last character is a question mark
+  var questionText = $('#question').text();
+  if (questionText.length > 0 && questionText.slice(-1) == "?") {
+    onSubmitQuestion();
+  }
 }
 
 
@@ -250,6 +256,12 @@ function handleInput() {
   }
   // Update qids
   $("#qids").val(qids.join(""));
+
+  // Submit question if last character is a question mark
+  var questionText = $('#question').text();
+  if (questionText.length > 0 && questionText.slice(-1) == "?") {
+    onSubmitQuestion();
+  }
 }
 
 
@@ -761,13 +773,33 @@ can be submitted with the form */
 function onSubmitQuestion() {
   var question = $("#question").html();
   var entityMarkedQuestion = removeHtmlInputField(question);
+
+  // If question does not end with a question mark, add one
+  var appendix = "";
+  if (entityMarkedQuestion.length == 0 || entityMarkedQuestion.slice(-1) != "?") {
+    if (entityMarkedQuestion.length > 0 && entityMarkedQuestion.slice(-1) != " ") {
+      appendix += " ";
+    }
+    appendix += "?";
+  }
+  entityMarkedQuestion += appendix;
+  $("#question").html(question + appendix);
+
+  // Prepare form for submission
   console.log("Question sent to Aqqu: " + entityMarkedQuestion);
   $("#q").val(entityMarkedQuestion);
   var qids = getEntityQids(question);
   $("#qids").val(qids.join(","));
+
+  // Disable input field and submit button while waiting for the server response
   $("#question").prop("contenteditable", false);
   $("#ask").prop("disabled", true);
+
+  // Make sure no completion suggestions are offered after disabeling the input field
+  maxTimestamp = Date.now();
   removeCompletionButtons(0);
+
+  // Submit form
   $("#questionForm").submit();
   return true;
 }
