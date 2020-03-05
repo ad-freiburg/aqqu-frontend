@@ -43,8 +43,7 @@ def retrieve_wiki_image_url(batch, img_size=500):
     titles_str = "|".join(batch.keys())
     host = "https://en.wikipedia.org/w/api.php"
     data = {"action": "query", "prop": "pageimages", "titles": titles_str,
-            "pithumbsize": img_size, "format": "json", "formatversion": 2,
-            "pilicense": "any"}
+            "pithumbsize": img_size, "format": "json", "formatversion": 2}
 
     # Try to send request to API
     counter = 0
