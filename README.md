@@ -77,9 +77,9 @@ The script performs the following tasks:
     python3 get_wiki_info_mapping.py -t "${base_path}qid_to_title.tsv" -a "${base_path}qid_to_abstract.tsv" -i "${base_path}qid_to_image.tsv" -o "${base_path}qid_to_wikipedia_info.tsv"
 
 First, a mapping from QID to the tuple `(<title>, <abstract>, <image>)` is created.
-The resulting mapping file is used as input for the Python script `get_wikipedia_image_urls.py`.
+The resulting mapping file is used as input for the Python script `get_wiki_image_urls.py`.
 
-    python3 get_wikipedia_image_urls.py "${base_path}qid_to_wiki_image.tsv" -i "${base_path}qid_to_wikipedia_info.tsv"
+    python3 get_wiki_image_urls.py "${base_path}qid_to_wiki_image.tsv" -i "${base_path}qid_to_wikipedia_info.tsv"
 
 This script retrieves image urls for all titles in the file from the [Wikipedia API](https://en.wikipedia.org/w/api.php) and writes a mapping from QID to image url to an output file `<directory>qid_to_wiki_image.tsv`.
 This will take roughly 2 hours.
