@@ -276,10 +276,10 @@ form {
     content: "";
     width: 0;
     height: 0;
-    border-top: 20px solid white;
+    border-top: 21px solid white;
     border-bottom: 20px solid white;
     border-left: 16px solid transparent;
-    border-right: 20px solid white;
+    border-right: 21px solid white;
     position: absolute;
     right: 0;
     top: 0;
@@ -356,10 +356,10 @@ form {
     width: 0;
     height: 0;
     display: block;
-    border-top: 20px solid white;
+    border-top: 21px solid white;
     border-bottom: 20px solid white;
     border-right: 10px solid transparent;
-    border-left: 20px solid white;
+    border-left: 21px solid white;
     position: absolute;
     left: 0;
     top: 0;
@@ -371,10 +371,10 @@ form {
     width: 0;
     height: 0;
     display: inline;
-    border-top: 20px solid white;
+    border-top: 21px solid white;
     border-bottom: 20px solid  white;
     border-left: 10px solid transparent;
-    border-right: 20px solid  white;
+    border-right: 21px solid  white;
     position: absolute;
     right: 0;
     top: 0;
