@@ -10,7 +10,8 @@
     --button-color: #307ac3;
     --button-color-light: #6ea1d5;
     --button-color-disabled: #B4B4B4;
-    --button-selected-color: #C7D3DF;
+    --button-color-selected: #26619c;
+    --answer-selected-color: #C7D3DF;
 }
 
 html {
@@ -109,6 +110,11 @@ form {
     position: absolute;
     right:    0;
     bottom:   0;
+    cursor: pointer;
+}
+
+#detailed_aqqu input:hover {
+    background-color: var(--button-color-selected);
 }
 
 #question {
@@ -253,7 +259,7 @@ form {
 .ask button {
     width: 100px;
     height: 40px;
-    background: linear-gradient(to bottom, var(--button-color) 0%, var(--button-color) 100%); /* W3C */
+    background: var(--button-color);
     border: none;
     border-radius: 5px;
     position: relative;
@@ -268,8 +274,8 @@ form {
     display: inline;
 }
 
-.ask button:active {
-    top: 1px;
+.ask button:hover {
+    background: var(--button-color-selected);
 }
 
 .ask button:after {
@@ -321,23 +327,17 @@ form {
 }
 
 .answers a:hover {
-    background-color: var(--button-selected-color);
+    background-color: var(--answer-selected-color);
 }
 
 .navigation {
     margin-top: 20px;
 }
 
-.navigation button:disabled {
-    background: var(--button-color-disabled);
-    cursor: default;
-}
-
-
 .navigation button {
     width: 50px;
     height: 40px;
-    background: linear-gradient(to bottom, var(--button-color) 0%, var(--button-color) 100%); /* W3C */
+    background: var(--button-color);
     border: none;
     border-radius: 5px;
     position: relative;
@@ -349,6 +349,15 @@ form {
     cursor: pointer;
     display: inline;
     margin: 0 0px;
+}
+
+.navigation button:hover {
+    background: var(--button-color-selected);
+}
+
+.navigation button:disabled {
+    background: var(--button-color-disabled);
+    cursor: default;
 }
 
 .left:after {
@@ -379,10 +388,6 @@ form {
     right: 0;
     top: 0;
     border-radius: 0 2px 2px 0px;  
-}
-
-.navigation button:active {
-    top: 1px;
 }
 
 #first {
@@ -444,6 +449,10 @@ form {
     font-size: 20px;
     font-weight: 500;
     cursor: pointer;
+}
+
+.show_more_less:hover {
+    background: var(--button-color-selected);
 }
 
 .more_results #show_more {
