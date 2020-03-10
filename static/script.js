@@ -772,6 +772,7 @@ function addAnswerField(answer, candidateIndex, answerIndex) {
 can be submitted with the form */
 function onSubmitQuestion() {
   var question = $("#question").html();
+  question = question.replace(/\[/g, "").replace(/\]/g, "");
   var entityMarkedQuestion = removeHtmlInputField(question);
 
   // If question does not end with a question mark, add one
