@@ -97,7 +97,7 @@ form {
     flex: 1;
 }
 
-#detailed_aqqu input {
+#detailed_aqqu {
     display: block;
     background-color: var(--button-color);
     border: 3px solid var(--button-color-light);
@@ -113,7 +113,7 @@ form {
     cursor: pointer;
 }
 
-#detailed_aqqu input:hover {
+#detailed_aqqu:hover {
     background-color: var(--button-color-selected);
 }
 

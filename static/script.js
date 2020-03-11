@@ -883,6 +883,15 @@ function setCaretPosition(data){
 }
 
 
+function adjustUrl(event) {
+  var href = "http://aqqu.cs.uni-freiburg.de/detailed/translate_and_execute_query";
+  var question = $("#question").text();
+  href = href + "?query=" + question;
+  $("#detailed_aqqu").attr('href', href);
+  return true;
+}
+
+
 $(document).ready(function(){
   // Get value for show completions checkbox from Cookie
   var cookieStr = localStorage.getItem("showCompletions");
@@ -999,8 +1008,7 @@ $(document).ready(function(){
   });
 
   // When redirecting to detailed Aqqu insert current question into input field
-  $("#detailed_aqqu").on("click", function(event){
-    var question = $("#question").text();
-    $("#detailed_aqqu_query").val(question)
+  $("#detailed_aqqu").click(function(event) {
+    adjustUrl();
   });
 });
