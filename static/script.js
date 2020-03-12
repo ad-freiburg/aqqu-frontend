@@ -1047,4 +1047,7 @@ $(document).ready(function(){
         event.preventDefault();
     }
   });
+
+  // Adjust href of "detailed aqqu" anchor
+  adjustUrl($("#question").text());
 });
