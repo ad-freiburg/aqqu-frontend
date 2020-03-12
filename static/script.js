@@ -135,6 +135,9 @@ function handleCompletionButtonClick(buttonId) {
   if (questionText.length > 0 && questionText.slice(-1) == "?") {
     onSubmitQuestion();
   }
+
+  // Adjust href of "detailed aqqu" anchor
+  adjustUrl(questionText);
 }
 
 
@@ -262,6 +265,9 @@ function handleInput() {
   if (questionText.length > 0 && questionText.slice(-1) == "?") {
     onSubmitQuestion();
   }
+
+  // Adjust href of "detailed aqqu" anchor
+  adjustUrl(questionText);
 }
 
 
@@ -883,12 +889,11 @@ function setCaretPosition(data){
 }
 
 
-function adjustUrl(event) {
-  var href = "http://aqqu.cs.uni-freiburg.de/detailed/translate_and_execute_query";
-  var question = $("#question").text();
-  href = href + "?query=" + question;
+function adjustUrl(newQuestion) {
+  var href = $("#detailed_aqqu").attr('href');
+  var endIndex = (href.indexOf("?") == -1) ? href.length : href.indexOf("?");
+  href = href.substring(0, endIndex) + "?query=" + newQuestion;
   $("#detailed_aqqu").attr('href', href);
-  return true;
 }
 
 
@@ -1005,10 +1010,5 @@ $(document).ready(function(){
     if(event.which == 38 || event.which == 40){
         event.preventDefault();
     }
-  });
-
-  // When redirecting to detailed Aqqu insert current question into input field
-  $("#detailed_aqqu").click(function(event) {
-    adjustUrl();
   });
 });
