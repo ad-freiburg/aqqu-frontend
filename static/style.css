@@ -46,7 +46,7 @@ form {
     margin: 0;
 }
 
-#checkbox {
+.checkbox input {
     margin: 4px;
 }
 
@@ -160,6 +160,10 @@ form {
     color: var(--text-color-medium);
 }
 
+#question[contenteditable="false"] .hidden {
+    color: var(--text-color-light);
+}
+
 [placeholder]:empty::before {
     content: attr(placeholder);
     color: var(--text-color-placeholder);
@@ -170,10 +174,18 @@ form {
 }
 
 .entity {
-    background-color: transparent;
     color: var(--main-color);
     position: relative;
     cursor: pointer;
+}
+
+#question .hidden {
+    color: var(--text-color);
+    cursor: text;
+}
+
+.comp_buttons .hidden {
+    color: var(--text-color-light);
 }
 
 .tooltip {
@@ -250,7 +262,10 @@ form {
 .alias {
     font-style: italic;
     color: var(--button-color-light);
-    text-shadow: 0 0 0 transparent;
+}
+
+.alias .hidden {
+    color: var(--text-color-light);
 }
 
 .ask {

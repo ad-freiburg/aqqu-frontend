@@ -16,9 +16,9 @@ var maxTimestamp = 0;
 var showCompletions = true;
 
 // Regexes
-var inputEntityRegex = /<span class="entity"[^>]*>([^<]*?)<\/span>/g
-var inputEntityOriginalRegex = /<span class="entity"[^>]*data-original="(.*?)"[^>]*>[^<]*?<\/span>/g
-var inputEntityQidRegex = /<span class="entity"[^>]*data-qid="(.*?)"[^>]*>[^<]*?<\/span>/g
+var inputEntityRegex = /<span class="entity[^>]*>([^<]*?)<\/span>/g
+var inputEntityOriginalRegex = /<span class="entity[^>]*data-original="(.*?)"[^>]*>[^<]*?<\/span>/g
+var inputEntityQidRegex = /<span class="entity[^>]*data-qid="(.*?)"[^>]*>[^<]*?<\/span>/g
 
 // Mouseover variables
 var URL_PREFIX_TOOLTIP = basePath + "tooltip?qid=";
@@ -207,7 +207,7 @@ function handleInput() {
       if (match[1] != getEntityOriginals(match[0])[0]) {
         // Transform entity span where the name does not match the original
         // entity name into normal word span
-        spans[i] = spans[i].replace(/<span class="entity"[^>]*>/, '<span>');
+        spans[i] = spans[i].replace(/<span class="entity[^>]*>/, '<span>');
         entityMismatch = true;
       }
     }
@@ -383,7 +383,8 @@ function getQidQuestion(question, qids) {
 /* If the completion was made for an alias, append alias */
 function addAlias(completion, alias) {
   if (alias != "") {
-    completion = completion.replace(/\[(.*?)\] $/, ' \[$1 <span class="alias">\(' + alias + '\)</span>\] ');
+    var cls = (showEntities) ? "alias" : "alias hidden";
+    completion = completion.replace(/\[(.*?)\] $/, ' \[$1 <span class="' + cls + '">\(' + alias + '\)</span>\] ');
   }
   return completion
 }
@@ -393,7 +394,8 @@ function addAlias(completion, alias) {
 function putTextIntoSpans(text) {
   text = text.replace(/(\]|^)([^\[\]]*?)(\[)/g, '$1<span>$2</span>$3');
   text = text.replace(/(\]|^)([^\[\]]*?)($)/g, '$1<span>$2</span>');
-  text = text.replace(/\[(.*?)\]/g, '<span class="entity">$1</span>');
+  var cls = (showEntities) ? "entity" : "entity hidden";
+  text = text.replace(/\[(.*?)\]/g, '<span class="' + cls + '">$1</span>');
   return text
 }
 
@@ -413,11 +415,12 @@ function putTextIntoSpansInput(text, qids, urls) {
     var qid = qids[i];
     var url = urls[i];
     // For now assume the user does not enter brackets []
-    var replStr = '<span class="entity" id="entity_' + i + '" onmouseleave="'
+    var cls = (showEntities) ? "entity" : "entity hidden";
+    var replStr = '<span class="' + cls + '" id="entity_' + i + '" onmouseleave="'
                   + 'hideTooltip(this)" onmouseenter="showTooltip(this, event)"'
                   + ' data-qid="'+ qid + '" data-original="' + match[1] + '"';
     if (url) {
-      replStr += ' onclick="window.open(\'' + url + '\')"';
+      replStr += ' onclick="onClickInputEntity(\'' + url + '\')"';
     } else {
       replStr += ' style="cursor: default"';
     }
@@ -427,6 +430,12 @@ function putTextIntoSpansInput(text, qids, urls) {
     i++;
   }
   return text
+}
+
+function onClickInputEntity(url) {
+  if (showEntities) {
+    window.open(url);
+  }
 }
 
 
@@ -454,7 +463,11 @@ function showTooltip(el, event) {
   var parentId = $(el).attr("id");
   positionTooltip(tooltipId, event.pageX, parentId);
   $("#" + tooltipId).css("display", "flex");
-  $("#" + tooltipId).css("visibility", "visible");
+
+  // Don't show input field tooltips if showEntities is false
+  if (showEntities || !$(el).hasClass("entity")) {
+    $("#" + tooltipId).css("visibility", "visible");
+  }
 }
 
 
@@ -900,13 +913,13 @@ function adjustUrl(newQuestion) {
 $(document).ready(function(){
   // Get value for show completions checkbox from Cookie
   var cookieStr = localStorage.getItem("showCompletions");
-  // Default valu of showCompletions (cookieStr == null) is true
+  // Default value of showCompletions (cookieStr == null) is true
   showCompletions = cookieStr == "false" ? false : true
-  $('#checkbox').prop("checked", showCompletions);
+  $('#checkbox_completions').prop("checked", showCompletions);
 
-  // Handle checkbox state change
-  $('#checkbox').change(function() {
-    if ($('#checkbox').is(":checked")) {
+  // Handle completions checkbox state change
+  $('#checkbox_completions').change(function() {
+    if ($('#checkbox_completions').is(":checked")) {
       showCompletions = true;
       getCompletions();
     } else {
@@ -916,6 +929,29 @@ $(document).ready(function(){
     // Store user preference in a Cookie
     localStorage.setItem("showCompletions", showCompletions);
   });
+
+  // Get value for show entities checkbox from Cookie
+  var cookieStr = localStorage.getItem("showEntities");
+  // Default value of showEntities (cookieStr == null) is true
+  showEntities = cookieStr == "false" ? false : true
+  $('#checkbox_entities').prop("checked", showEntities);
+  if (!showEntities) $('.entity').addClass("hidden");
+
+  // Handle entities checkbox state change
+  $('#checkbox_entities').change(function() {
+    if ($('#checkbox_entities').is(":checked")) {
+      showEntities = true;
+      $('.entity').removeClass("hidden");
+      $('.alias').removeClass("hidden");
+    } else {
+      showEntities = false;
+      $('.entity').addClass("hidden");
+      $('.alias').addClass("hidden");
+    }
+    // Store user preference in a Cookie
+    localStorage.setItem("showEntities", showEntities);
+  });
+
 
   // Set hidden input qids to data qids. This is needed as for some unknown
   // reason while the data value gets updated by the server, the input value
