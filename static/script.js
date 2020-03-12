@@ -123,8 +123,11 @@ function handleCompletionButtonClick(buttonId) {
     }
   }
 
-  // set focus to the end of the input within the input field.
+  // Set focus to the end of the input within the input field.
   $('#question').focus();
+
+  // Get completons for the new question prefix
+  getCompletions();
 
   // Update cursor position
   placeCaretAtPosition($('#question')[0], -1);
@@ -281,9 +284,14 @@ function handleKeyPress(event) {
         return;
       }
       return;
-    case 17:
-      // Ctrl: do nothing: prevent default to avoid call to getCompletions on
-      // submit
+    case 9:  // tab
+    case 17:  // ctrl
+    case 18:  // alt
+    case 36:  // home
+    case 37:  // left arrow
+    case 39:  // right arrow
+      // Prevent default to avoid call to getCompletions (important for
+      // ctrl to avoid call to getCompletions on submit via ctrl+enter)
       return;
     case 38:
       // Up arrow: navigate to upper completion
@@ -989,11 +997,12 @@ $(document).ready(function(){
     }
   });
 
+  $("#question").focus();
+  // Set caret to the end of the input
+  placeCaretAtPosition($('#question')[0], -1);
   if ($(".result").length == 0) {
-    // Focus input field when page is loaded and no answers are given
-    $("#question").focus();
-    // Set caret to the end of the input
-    placeCaretAtPosition($('#question')[0], -1);
+    // Get completions when page is loaded and no answers are given
+    getCompletions();
   }
 
   $("#question").on({
