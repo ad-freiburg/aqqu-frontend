@@ -32,6 +32,14 @@ var numAnswers = 0;
 var currAnswers = [];
 
 // ---------------------- QAC related functions -------------------------------
+/* Remove all tags that are not <span>-tags. Otherwise, tags could be introduced
+ * e.g. by copying formatted text from somewhere else.
+ */
+function removeTags(text) {
+  var regex = /<((?!span).)*?>/g;
+  return text.replace(regex, "");
+}
+
 
 /* Handle navigation of the completion predictions using arrow keys.
  * Direction is an integer and either 1 (up) or -1 (down).
@@ -231,11 +239,8 @@ function handleInput() {
     newText = text.replace(/(<span>[^<]*?)<\/span><span>/g, "$1");
   } while (newText != text)
 
-  // Remove automatically inserted line breaks
-  text = text.replace("<br>", "");
-
-  // Remove automatically inserted font color tags
-  text = text.replace(/<font[^<>]*?>([^<>]*?)<\/font>/g, "$1");
+  // Remove automatically inserted line breaks and tags other than spans
+  text = removeTags(text);
 
   // Prevent Firefox weird-caret-position-bug when all spans are empty by
   // inserting an invisible character
