@@ -135,7 +135,7 @@ function handleCompletionButtonClick(buttonId) {
 
   // Submit question if last character is a question mark
   var questionText = $('#question').text();
-  if (questionText.length > 0 && questionText.slice(-1) == "?") {
+  if (questionText.length > 0 && questionText.slice(-2) == " ?") {
     onSubmitQuestion();
   }
 
@@ -263,13 +263,8 @@ function handleInput() {
   // Update qids
   $("#qids").val(qids.join(""));
 
-  // Submit question if last character is a question mark
-  var questionText = $('#question').text();
-  if (questionText.length > 0 && questionText.slice(-1) == "?") {
-    onSubmitQuestion();
-  }
-
   // Adjust href of "detailed aqqu" anchor
+  var questionText = $('#question').text();
   adjustUrl(questionText);
 }
 
