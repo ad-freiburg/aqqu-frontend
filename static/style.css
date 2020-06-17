@@ -12,6 +12,9 @@
     --button-color-disabled: #B4B4B4;
     --button-color-selected: #26619c;
     --answer-selected-color: #C7D3DF;
+    --text-color-warning: #B01D3C;
+    --link-color-warning: #701226;
+    --background-color-warning: #FE9FAC;
 }
 
 html {
@@ -40,6 +43,20 @@ h2 {
     font-weight: 400;
     font-size: 19px;
     margin-bottom: 70px;
+}
+
+.warning {
+    color: var(--text-color-warning);
+    font-size: 17px;
+    background-color: var(--background-color-warning);
+    border: 2px;
+    border-style: solid;
+    border-radius: 8px;
+    border-color: var(--text-color-warning);
+}
+
+.warning a {
+    color: var(--link-color-warning);
 }
 
 form {
