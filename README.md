@@ -5,7 +5,7 @@ This is an intuitive frontend for Aqqu Question Answering which features Questio
 Build the docker image and start the server using the following commands:
 
     docker build -t aqqu_frontend .
-    docker run --rm -it -p 8182:80 --read-only -v /nfs/students/natalie-prange/wikidata_mappings:/data aqqu_frontend
+    docker run --restart unless-stopped -d -it -p 8182:80 --read-only -v /nfs/students/natalie-prange/wikidata_mappings:/data aqqu_frontend
    
 The frontend can then be accessed on server `<host>` with port `<port>` (i.e. 8182 when using above command) at `http://<host>:<port>`.
 
