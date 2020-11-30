@@ -18,7 +18,7 @@ PORT_AQQU = 8300
 PATH_PREFIX_AQQU = "/?q=%s"
 
 # Connection details for the QAC API
-HOSTNAME_QAC = "nkaba.informatik.privat"
+HOSTNAME_QAC = "wolga.informatik.privat"
 PORT_QAC = 8181
 PATH_PREFIX_QAC = "/?q=%s"
 
