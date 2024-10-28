@@ -13,4 +13,4 @@ COPY static /home/static
 CMD ["python3", "/home/aqqu_server.py", "80", "-d", "/data/"]
 
 # docker build -t aqqu_frontend .
-# docker run --rm -it -p 8182:80 --read-only -v /nfs/students/natalie-prange/wikidata_mappings:/data aqqu_frontend
+# docker run -d --restart always -it -p 8182:80 --read-only -v /nfs/students/natalie-prange/wikidata_mappings:/data aqqu_frontend
